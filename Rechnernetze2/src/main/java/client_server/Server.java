@@ -3,9 +3,13 @@ package client_server;
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.Map;
+
 
 public class Server
 {
+
+	private Map<String,String> nutzer;
 	public Server()
 	{
 		try
@@ -35,6 +39,21 @@ public class Server
 			{
 				line = reader.readLine();
 				System.out.printf("Vom Client (%s) empfangen: %s%n", socket.getRemoteSocketAddress(), line);
+				// Registrieren
+				String eingabe[] = line.split(" ");
+
+				switch(eingabe[0]) {
+
+				case "0":
+					handleRegistrieren(eingabe);
+					break;
+
+				case "1":
+					handleAnmelden(eingabe);
+					break;
+				}
+
+
 				final StringBuffer reverse = new StringBuffer(line).reverse();
 				System.out.printf("Sende an Client (%s): %s%n", socket.getRemoteSocketAddress(), reverse);
 				writer.write(reverse + "\n");
@@ -48,8 +67,26 @@ public class Server
 		}
 	}
 
-	public static void main(String[] args)
-	{
+	public void handleRegistrieren(String []line) {
+		String benutzername = line[1];
+		String passwort = line[2];
+		nutzer.put(benutzername, passwort);
+
+	}
+	public void handleAnmelden(String []line) {
+		String benutzername = line[1];
+		String passwort = line[2];
+		if(nutzer.containsKey(benutzername)) {
+			System.out.println("Nutzer vorhanden");
+			if(nutzer.get(benutzername).equals(passwort)) {
+				System.out.println("Eingeloggt");
+			}
+		}else
+			System.out.println("Nutzer nicht vorhanden");
+			
+	}
+
+	public static void main(String[] args){
 		new Server();
 	}
 }

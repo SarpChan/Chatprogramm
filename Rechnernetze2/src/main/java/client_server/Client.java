@@ -3,6 +3,11 @@ package client_server;
 import java.io.*;
 import java.net.Socket;
 
+
+// In der line steht 0: fuer registrieren
+// 1: Anmelden
+// 2: Chatten
+
 public class Client
 {
 
@@ -56,7 +61,7 @@ public class Client
 	public static void main(String[] args) throws IOException
 	{
 		final Client client = new Client();
-
+		client.registrieren();
 		final BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
 		while (true)
 		{
@@ -64,4 +69,31 @@ public class Client
 			client.sendText(line);
 		}
 	}
+
+	public void registrieren() {
+		String line;
+		System.out.println("Registrieren");
+		try {
+			System.out.println("Benutzername:");
+			final BufferedReader readerBenutzer = new BufferedReader(new InputStreamReader(System.in));
+			final String lineName = readerBenutzer.readLine();
+			
+			System.out.println("Passwort:");
+			final BufferedReader readerPasswort = new BufferedReader(new InputStreamReader(System.in));
+			final String linePasswort = reader.readLine();
+			line = "0 " + lineName + " " + linePasswort;
+			
+			
+			sendText(line);
+			
+			
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+
+	}
+
+
 }
