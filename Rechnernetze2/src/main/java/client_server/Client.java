@@ -61,38 +61,34 @@ public class Client
 	public static void main(String[] args) throws IOException
 	{
 		final Client client = new Client();
-		client.registrieren();
+		
 		final BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+		client.login(reader,"0 ");
 		while (true)
 		{
-			final String line = reader.readLine();
+			client.login(reader,"1 ");
+			String line = reader.readLine();
 			client.sendText(line);
 		}
 	}
 
-	public void registrieren() {
+	public void login(BufferedReader reader, String option) {
 		String line;
 		System.out.println("Registrieren");
 		try {
 			System.out.println("Benutzername:");
-			final BufferedReader readerBenutzer = new BufferedReader(new InputStreamReader(System.in));
-			final String lineName = readerBenutzer.readLine();
+			String lineName = reader.readLine();
 			
 			System.out.println("Passwort:");
-			final BufferedReader readerPasswort = new BufferedReader(new InputStreamReader(System.in));
-			final String linePasswort = reader.readLine();
-			line = "0 " + lineName + " " + linePasswort;
+			String linePasswort = reader.readLine();
 			
+			line = option + lineName + " " + linePasswort;
 			
 			sendText(line);
-			
-			
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
-
 	}
 
 
