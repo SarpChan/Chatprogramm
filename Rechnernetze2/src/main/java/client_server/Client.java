@@ -14,7 +14,9 @@ public class Client
 	private Socket socket;
 	private BufferedWriter writer;
 	private BufferedReader reader;
-
+	private String benutzername = "";
+	
+	
 	public Client()
 	{
 		try
@@ -86,7 +88,6 @@ public class Client
 			
 			sendText(line);
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
