@@ -27,6 +27,10 @@ import javax.swing.SwingUtilities;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 
+
+
+
+
 public class UI extends JFrame{
 
     static GraphicsConfiguration gc;
@@ -127,7 +131,7 @@ public class UI extends JFrame{
             }
 
             public void changed() {
-                if (username.getText().isBlank() || password.getText().isBlank()) {
+                if (username.getText().isEmpty() || password.getText().isEmpty()) {
                     if (anmelden.isEnabled()) {
                         anmelden.setEnabled(false);
                         registrieren.setEnabled(false);
