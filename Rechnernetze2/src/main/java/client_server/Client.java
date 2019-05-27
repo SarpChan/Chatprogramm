@@ -55,6 +55,7 @@ public class Client
 		try
 		{
 			socket.close();
+			sendText("3 " + benutzername);
 		}
 		catch (IOException e)
 		{

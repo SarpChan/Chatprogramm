@@ -66,7 +66,7 @@ public class Server
 	
 	private void handleRequests(final Socket socket, final BufferedReader reader, final BufferedWriter writer)
 	{
-		while (true)
+		while (!socket.isClosed())
 		{
 			String line;
 			try
