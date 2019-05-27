@@ -15,8 +15,8 @@ public class Client
 	private BufferedWriter writer;
 	private BufferedReader reader;
 	private String benutzername = "";
-	
-	
+
+
 	public Client()
 	{
 		try
@@ -31,6 +31,7 @@ public class Client
 		}
 	}
 
+	
 	public void sendText(final String text)
 	{
 		try
@@ -48,6 +49,7 @@ public class Client
 		}
 	}
 
+	
 	public void close()
 	{
 		try
@@ -60,13 +62,14 @@ public class Client
 		}
 	}
 
+	
 	public static void main(String[] args) throws IOException
 	{
 		final Client client = new Client();
 		UI gui = new UI(client);
-		
+
 		gui.setVisible(true);
-		
+
 		//final BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
 		//client.login(reader,"0 ");
 		// while (true)
@@ -77,21 +80,34 @@ public class Client
 		// }
 	}
 
-	public void login(String username, String password) {
+	
+	public boolean login(String username, String password, String option) {
 		String line;
 		System.out.println("Registrieren");
-		
-			System.out.println("Benutzername:");
-			String lineName = username;
-			
-			System.out.println("Passwort:");
-			String linePasswort = password;
-			
-			line = "1 " + lineName + " " + linePasswort;
-			
-			sendText(line);
-		
+
+		// "sichere" Übertragung des Passworts
+		final StringBuffer reverse = new StringBuffer(password).reverse();
+
+		line = option + " " + username + " " + reverse;
+
+		try
+		{
+			System.out.println("Sende an Server: " + line);
+			writer.write(line + "\n");
+			writer.flush();
+
+			final String text = reader.readLine();
+			System.out.println("Vom Server empfangen: " + text);
+			if (text.trim().equals("200")) {
+				benutzername = username;
+				return true;
+			}
+		}
+		catch (IOException e)
+		{
+			e.printStackTrace();
+		}
+
+		return false;
 	}
-
-
 }
