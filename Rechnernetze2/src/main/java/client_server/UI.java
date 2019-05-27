@@ -163,7 +163,7 @@ public class UI extends JFrame{
             }
 
             public void changed() {
-                if (username.getText().isBlank() || password.getText().isBlank()) {
+                if (username.getText().isEmpty() || password.getText().isEmpty()) {
                     if (anmelden.isEnabled()) {
                         anmelden.setEnabled(false);
                         registrieren.setEnabled(false);
@@ -182,10 +182,10 @@ public class UI extends JFrame{
             @Override
             public void actionPerformed(ActionEvent e) {
 
-                client.login(username.getText(), password.getText());
+                if(client.login(username.getText(), password.getText(), "1")) {
+                	switchView(Views.HOME);
+                }
 
-                switchView(Views.HOME);
-                
                 return;
             }
             
@@ -195,7 +195,11 @@ public class UI extends JFrame{
 
             @Override
             public void actionPerformed(ActionEvent e) {
-                
+            	if(client.login(username.getText(), password.getText(), "0")) {
+                	switchView(Views.HOME);
+                }
+
+                return;
             }
             
         });

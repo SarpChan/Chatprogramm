@@ -63,6 +63,7 @@ public class Server
 		}
 	}
 
+	
 	private void handleRequests(final Socket socket, final BufferedReader reader, final BufferedWriter writer)
 	{
 		while (true)
@@ -77,14 +78,13 @@ public class Server
 
 				switch(eingabe[0]) {
 				case "0":
-					System.out.println("Ich war hier");
 					handleRegistrieren(eingabe);
 					break;
 				case "1":
 					handleAnmelden(eingabe);
 					break;
 				case "3":
-					handleAnmelden(eingabe);
+					handleAbmelden(eingabe);
 					break;
 				default:
 					System.out.println(line);
@@ -101,15 +101,17 @@ public class Server
 		}
 	}
 
+	
 	public void handleRegistrieren(String []line) {
 		String benutzername = line[1];
-		String passwort = line[2];
+		String reverse = line[2];
+		final StringBuffer passwort = new StringBuffer(reverse).reverse();
 
 		if(!nutzer.containsKey(benutzername) ) {
-			nutzer.put(benutzername, passwort);
+			nutzer.put(benutzername, passwort.toString());
 			aktiveNutzer.add(benutzername);
 			try {
-				writer.write("aktiv \n");
+				writer.write("200 \n");
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
@@ -121,19 +123,20 @@ public class Server
 			}
 		}
 	}
-	
-	
+		
 	
 	public void handleAnmelden(String []line) {
 		String benutzername = line[1];
-		String passwort = line[2];
+		String reverse = line[2];
+		final StringBuffer passwort = new StringBuffer(reverse).reverse();
+		
 		if(nutzer.containsKey(benutzername)) {
-			if(nutzer.get(benutzername).equals(passwort)) {
+			if(nutzer.get(benutzername).equals(passwort.toString())) {
 				if(!aktiveNutzer.contains(benutzername)) {
 					System.out.println("Eingeloggt");
 					try {
 						aktiveNutzer.add(benutzername);
-						writer.write("aktiv \n");
+						writer.write("200 \n");
 					} catch (IOException e) {
 						e.printStackTrace();
 					}
@@ -162,7 +165,14 @@ public class Server
 			}
 		}		
 	}
+	
+	
+	public void handleAbmelden(String [] line) {
+		String benutzername = line[1];
+		aktiveNutzer.remove(benutzername);
+	}
 
+	
 	public static void main(String[] args){
 		new Server();
 	}
