@@ -1,0 +1,39 @@
+{
+    "configurations": [
+        {
+            "type": "java",
+            "name": "CodeLens (Launch) - Client",
+            "request": "launch",
+            "mainClass": "client_server.Client",
+            "projectName": "Rechnernetze2"
+        },
+        {
+            "type": "java",
+            "name": "CodeLens (Launch) - Server",
+            "request": "launch",
+            "mainClass": "client_server.Server",
+            "projectName": "Rechnernetze2"
+        },
+        {
+            "type": "java",
+            "name": "CodeLens (Launch) - gui",
+            "request": "launch",
+            "mainClass": "client_server.gui",
+            "projectName": "Rechnernetze2"
+        },
+        {
+            "type": "java",
+            "name": "CodeLens (Launch) - client2",
+            "request": "launch",
+            "mainClass": "client_server.client2",
+            "projectName": "Rechnernetze2"
+        },
+        {
+            "type": "java",
+            "name": "CodeLens (Launch) - server2",
+            "request": "launch",
+            "mainClass": "client_server.server2",
+            "projectName": "Rechnernetze2"
+        }
+    ]
+}
