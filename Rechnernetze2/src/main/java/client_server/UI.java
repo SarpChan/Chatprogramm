@@ -35,14 +35,14 @@ import javax.swing.event.DocumentListener;
 public class UI extends JFrame{
 
     static GraphicsConfiguration gc;
-    private JPanel southPanel, registrierPanel,  user, pass, buttons;
+    private JPanel southPanel, registrierPanel,  user, pass, buttons, center;
     private JTextArea textArea;
     private JScrollPane areaScrollPane;
     private JTextField username;
     private JPasswordField password;
     private JButton absenden, registrieren, anmelden, abmelden;
     private Client client;
-    private JList center;
+    private JList nutzerliste;
 
     
 
@@ -55,8 +55,9 @@ public class UI extends JFrame{
         this.textArea = new JTextArea(4, 20);
         this.areaScrollPane = new JScrollPane(this.textArea);
         this.registrierPanel = new JPanel();
+        this.center = new JPanel();
         String [] hallo = {"hallo", "wie bitte"};
-        this.center = new JList<>(hallo);
+        this.nutzerliste = new JList<>(hallo);
         this.user = new JPanel();
         this.pass = new JPanel();
         this.buttons = new JPanel();
@@ -77,7 +78,7 @@ public class UI extends JFrame{
 
 
         // LoginPanel
-        center.setBackground(Color.GRAY);
+        nutzerliste.setBackground(Color.GRAY);
 
         
 
@@ -117,7 +118,8 @@ public class UI extends JFrame{
         registrierPanel.add(Box.createVerticalGlue());
 
         
-
+        center.add(this.abmelden);
+        center.add(this.nutzerliste);
 
         
 
@@ -231,6 +233,19 @@ public class UI extends JFrame{
             
         });
 
+        abmelden.addActionListener(new ActionListener() {
+
+            @Override
+            public void actionPerformed(ActionEvent e) {
+
+                client.close();
+                switchView(Views.LOGIN);
+
+                return;
+            }
+            
+        });
+
         registrieren.addActionListener(new ActionListener() {
 
             @Override
@@ -295,8 +310,9 @@ public class UI extends JFrame{
                         repaint();
                         validate();
 
-                        add(abmelden, BorderLayout.CENTER);
+                        
                         add(center, BorderLayout.CENTER);
+                        
                         textArea.setEditable(true);
                         
                         add(southPanel, BorderLayout.SOUTH);
