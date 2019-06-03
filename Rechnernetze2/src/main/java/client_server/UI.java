@@ -10,6 +10,8 @@ import java.awt.GridLayout;
 import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
@@ -67,13 +69,19 @@ public class UI extends JFrame{
         this.areaScrollPane = new JScrollPane(this.textArea);
         this.registrierPanel = new JPanel();
         this.model = new DefaultListModel<>();
-        this.model.addElement("hallo");
-        this.model.addElement("wie bitte");
+        
         this.nutzerliste = new JList<>(model);
         this.nutzerAnzeige = new JScrollPane(this.nutzerliste);
-        this.model.addElement("update");
         
         
+        
+        setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+        this.addWindowListener(new WindowAdapter() {
+        @Override
+        public void windowClosing(WindowEvent event) {
+            exitProcedure();
+        }
+    });
        
 
 
@@ -266,7 +274,9 @@ public class UI extends JFrame{
             public void actionPerformed(ActionEvent e) {
 
                 if(client.login(username.getText(), password.getText(), "1")) {
-                	switchView(Views.HOME);
+                    
+                    switchView(Views.HOME);
+                    updateNutzerListe();
                 }
 
                 return;
@@ -279,7 +289,9 @@ public class UI extends JFrame{
             @Override
             public void actionPerformed(ActionEvent e) {
 
-                model.addElement("add");
+                updateNutzerListe();
+
+                
                 return;
             }
             
@@ -379,6 +391,32 @@ public class UI extends JFrame{
                 }
             });
     
+    }
+
+    public void updateNutzerListe(){
+
+        
+        String text = client.requestActiveUser();
+        
+        if (text != null)
+        {
+            String [] liste = text.split(" ");
+
+            model.clear();
+
+            for (String ele : liste) {
+                model.addElement(ele);
+            }
+        }
+    
+
+    }
+
+    public void exitProcedure(){
+        client.close();
+        dispose();
+        
+        System.exit(0);
     }
     
 }

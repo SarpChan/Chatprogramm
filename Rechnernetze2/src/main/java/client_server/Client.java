@@ -59,8 +59,9 @@ public class Client
 	{
 		try
 		{
-			socket.close();
+			
 			sendText("3 " + benutzername);
+			socket.close();
 		}
 		catch (IOException e)
 		{
@@ -115,6 +116,25 @@ public class Client
 		}        
 	}
 	
+	public String requestActiveUser(){
+		String line ="7 " + benutzername;
+
+		try{
+			writer.write(line + " \n");
+			writer.flush();
+
+			final String text = reader.readLine();
+
+			
+			return text;
+		}
+		catch (IOException e)
+		{
+			e.printStackTrace();
+		}
+
+		return null;
+	}
 	
 	public boolean login(String username, String password, String option) {
 		String line;
@@ -154,14 +174,7 @@ public class Client
 
 		gui.setVisible(true);
 
-		//final BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
-		//client.login(reader,"0 ");
-		// while (true)
-		// {
-		// 	client.login(reader,"1 ");
-		// 	String line = reader.readLine();
-		// 	client.sendText(line);
-		// }
+	
 	}
 
 }

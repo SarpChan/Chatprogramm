@@ -7,19 +7,22 @@ import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Map;
+import java.util.Set;
+
+import jnr.ffi.annotations.Synchronized;
 
 
 public class Server
 {
-	private Map<String,String> nutzer;
-	private Map <String, Socket> aktiveNutzer;
-	private BufferedWriter writer;
-	BufferedReader reader;
+	
+	private Map<InetAddress, Teilserver> teilserverliste;
+	
+	
 
 	public Server()
 	{
-		nutzer = new HashMap<>();
-		aktiveNutzer = new HashMap<>();
+		
+		teilserverliste = new HashMap<>();
 
 		try
 		{
@@ -30,24 +33,20 @@ public class Server
 				try
 				{
 					final Socket socket = serverSocket.accept();
-					System.out.println("Client hat sich verbunden: " + socket.getInetAddress());
+										
 
 					final Thread thread = new Thread(new Runnable()
 					{
 						@Override
 						public void run()
 						{
-							try
-							{
-								reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-								writer = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
+							InetAddress temp = socket.getInetAddress();
+							teilserverliste.put(temp, new Teilserver(socket));
+							teilserverliste.get(temp).handleRequests();
+							teilserverliste.remove(temp);
 
-								handleRequests(socket, reader, writer);
-							}
-							catch (IOException e)
-							{
-								e.printStackTrace();
-							}
+
+
 						}
 					});
 					thread.start();
@@ -65,142 +64,27 @@ public class Server
 	}
 
 
-	private void handleRequests(final Socket socket, final BufferedReader reader, final BufferedWriter writer)
-	{
-		while (!socket.isClosed())
-		{
-			String line;
-			try
-			{
-				line = reader.readLine();
-				System.out.printf("Vom Client (%s) empfangen: %s%n", socket.getRemoteSocketAddress(), line);
-				// Registrieren
-				String eingabe[] = line.split(" ");
-
-				switch(eingabe[0]) {
-				case "0":
-					handleRegistrieren(eingabe, socket);
-					break;
-				case "1":
-					handleAnmelden(eingabe, socket);
-					break;
-				case "2":
-					handleChat(eingabe, socket);
-					break;
-				case "3":
-					handleAbmelden(eingabe);
-					break;
-				default:
-					System.out.println(line);
-					writer.write("default \n");
-					break;
-				}
-				writer.flush();
-			}
-			catch (IOException e)
-			{
-				System.out.println(e.getMessage());
-				return;
-			}
-		}
-	}
-
-	
-	public void handleRegistrieren(String []line, Socket socket) {
-		String benutzername = line[1];
-		String reverse = line[2];
-		final StringBuffer passwort = new StringBuffer(reverse).reverse();
-
-		if(!nutzer.containsKey(benutzername) ) {
-			nutzer.put(benutzername, passwort.toString());
-			aktiveNutzer.put(benutzername, socket);
-			try {
-				writer.write("200 \n");
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		}else {
-			try {
-				writer.write("Nutzername bereits vergeben \n");
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		}
-	}
-		
-	
-	public void handleAnmelden(String []line, Socket socket) {
-		String benutzername = line[1];
-		String reverse = line[2];
-		final StringBuffer passwort = new StringBuffer(reverse).reverse();
-		
-		if(nutzer.containsKey(benutzername)) {
-			if(nutzer.get(benutzername).equals(passwort.toString())) {
-				if(!aktiveNutzer.containsKey(benutzername)) {
-					System.out.println("Eingeloggt");
-					try {
-						aktiveNutzer.put(benutzername, socket);
-						writer.write("200 \n");
-					} catch (IOException e) {
-						e.printStackTrace();
-					}
-				} else {
-					System.out.println("Schon eingeloggt ");
-					try {
-						writer.write("Schon eingeloggt \n");
-					} catch (IOException e) {
-						e.printStackTrace();
-					}
-				}
-			} else {
-				System.out.println("Passwort falsch ");
-				try {
-					writer.write("Passwort falsch \n");
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-			}
-		} else {
-			System.out.println("Nutzer nicht vorhanden");
-			try {
-				writer.write("Nutzer nicht vorhanden \n");
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		}		
-	}
-	
-	
-	public void handleChat(String []line, Socket socket) {
-		Socket chatPartnerSocket = aktiveNutzer.get(line[1]);
-		int port = chatPartnerSocket.getPort();
-		InetAddress ip = chatPartnerSocket.getInetAddress();
-		
-		try {
-			writer.write(String.valueOf(port) + " " + ip.getHostName() + "\n");
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-	}
-	
-	
-	public void handleAbmelden(String [] line) {
-		String benutzername = line[1];
-		aktiveNutzer.remove(benutzername);
-	}
-
-	
 	public static void main(String[] args){
 		new Server();
 	}
+
+	
+
 	
 	
-	public Map<String, String> getNutzer() {
-		return nutzer;
-	}
 
+	
+		
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
 
-	public Map<String, Socket> getAktiveNutzer() {
-		return aktiveNutzer;
-	}
+	
 }
