@@ -3,6 +3,7 @@ package client_server;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Map;
@@ -11,14 +12,14 @@ import java.util.Map;
 public class Server
 {
 	private Map<String,String> nutzer;
-	private ArrayList <String> aktiveNutzer;
+	private Map <String, Socket> aktiveNutzer;
 	private BufferedWriter writer;
 	BufferedReader reader;
 
 	public Server()
 	{
 		nutzer = new HashMap<>();
-		aktiveNutzer = new ArrayList<>();
+		aktiveNutzer = new HashMap<>();
 
 		try
 		{
@@ -63,7 +64,7 @@ public class Server
 		}
 	}
 
-	
+
 	private void handleRequests(final Socket socket, final BufferedReader reader, final BufferedWriter writer)
 	{
 		while (!socket.isClosed())
@@ -78,10 +79,13 @@ public class Server
 
 				switch(eingabe[0]) {
 				case "0":
-					handleRegistrieren(eingabe);
+					handleRegistrieren(eingabe, socket);
 					break;
 				case "1":
-					handleAnmelden(eingabe);
+					handleAnmelden(eingabe, socket);
+					break;
+				case "2":
+					handleChat(eingabe, socket);
 					break;
 				case "3":
 					handleAbmelden(eingabe);
@@ -102,14 +106,14 @@ public class Server
 	}
 
 	
-	public void handleRegistrieren(String []line) {
+	public void handleRegistrieren(String []line, Socket socket) {
 		String benutzername = line[1];
 		String reverse = line[2];
 		final StringBuffer passwort = new StringBuffer(reverse).reverse();
 
 		if(!nutzer.containsKey(benutzername) ) {
 			nutzer.put(benutzername, passwort.toString());
-			aktiveNutzer.add(benutzername);
+			aktiveNutzer.put(benutzername, socket);
 			try {
 				writer.write("200 \n");
 			} catch (IOException e) {
@@ -125,17 +129,17 @@ public class Server
 	}
 		
 	
-	public void handleAnmelden(String []line) {
+	public void handleAnmelden(String []line, Socket socket) {
 		String benutzername = line[1];
 		String reverse = line[2];
 		final StringBuffer passwort = new StringBuffer(reverse).reverse();
 		
 		if(nutzer.containsKey(benutzername)) {
 			if(nutzer.get(benutzername).equals(passwort.toString())) {
-				if(!aktiveNutzer.contains(benutzername)) {
+				if(!aktiveNutzer.containsKey(benutzername)) {
 					System.out.println("Eingeloggt");
 					try {
-						aktiveNutzer.add(benutzername);
+						aktiveNutzer.put(benutzername, socket);
 						writer.write("200 \n");
 					} catch (IOException e) {
 						e.printStackTrace();
@@ -167,6 +171,19 @@ public class Server
 	}
 	
 	
+	public void handleChat(String []line, Socket socket) {
+		Socket chatPartnerSocket = aktiveNutzer.get(line[1]);
+		int port = chatPartnerSocket.getPort();
+		InetAddress ip = chatPartnerSocket.getInetAddress();
+		
+		try {
+			writer.write(String.valueOf(port) + " " + ip.getHostName() + "\n");
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	
 	public void handleAbmelden(String [] line) {
 		String benutzername = line[1];
 		aktiveNutzer.remove(benutzername);
@@ -175,5 +192,15 @@ public class Server
 	
 	public static void main(String[] args){
 		new Server();
+	}
+	
+	
+	public Map<String, String> getNutzer() {
+		return nutzer;
+	}
+
+
+	public Map<String, Socket> getAktiveNutzer() {
+		return aktiveNutzer;
 	}
 }
