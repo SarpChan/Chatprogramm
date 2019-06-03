@@ -7,13 +7,16 @@ import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.GraphicsConfiguration;
 import java.awt.GridLayout;
+import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.util.ArrayList;
 
 import javax.swing.Box;
 import javax.swing.BoxLayout;
+import javax.swing.DefaultListModel;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -37,12 +40,15 @@ public class UI extends JFrame{
     static GraphicsConfiguration gc;
     private JPanel southPanel, registrierPanel,  user, pass, buttons, center;
     private JTextArea textArea;
-    private JScrollPane areaScrollPane;
+    private JScrollPane areaScrollPane, nutzerAnzeige;
     private JTextField username;
     private JPasswordField password;
     private JButton absenden, registrieren, anmelden, abmelden;
     private Client client;
-    private JList nutzerliste;
+    private JList<String> nutzerliste;
+    private DefaultListModel <String> model;
+    private Dimension centerDim;
+    
 
     
 
@@ -51,13 +57,47 @@ public class UI extends JFrame{
     public UI(Client cl){
         super(gc);
         this.client = cl;
+
+        setLayout(new BorderLayout());
+
+        this.centerDim = new Dimension(400,450);
+
         this.southPanel = new JPanel(new FlowLayout());
         this.textArea = new JTextArea(4, 20);
         this.areaScrollPane = new JScrollPane(this.textArea);
         this.registrierPanel = new JPanel();
+        this.model = new DefaultListModel<>();
+        this.model.addElement("hallo");
+        this.model.addElement("wie bitte");
+        this.nutzerliste = new JList<>(model);
+        this.nutzerAnzeige = new JScrollPane(this.nutzerliste);
+        this.model.addElement("update");
+        
+        
+       
+
+
+        
+        //this.nutzerliste.setCellRenderer(new NutzerlisteRenderer());
+        
+        
         this.center = new JPanel();
-        String [] hallo = {"hallo", "wie bitte"};
-        this.nutzerliste = new JList<>(hallo);
+        
+       
+        
+        this.center.setPreferredSize(this.centerDim);
+        this.center.setMaximumSize(this.centerDim);
+        this.nutzerAnzeige.setPreferredSize(this.centerDim);
+        this.nutzerAnzeige.setMaximumSize(this.centerDim);
+        
+        
+        
+        
+        
+
+        
+        this.center.add(this.nutzerAnzeige);
+
         this.user = new JPanel();
         this.pass = new JPanel();
         this.buttons = new JPanel();
@@ -74,56 +114,57 @@ public class UI extends JFrame{
         this.setSize(400, 600);
         this.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         this.setResizable(false);
+        this.username.grabFocus();
 
 
 
         // LoginPanel
-        nutzerliste.setBackground(Color.GRAY);
+        this.nutzerliste.setBackground(Color.GRAY);
 
         
 
-        username.setSize(100, 20);
-        password.setSize(100, 20);
-        username.setMaximumSize(new Dimension(100,20));
-        password.setMaximumSize(new Dimension(100,20));
+        this.username.setSize(100, 20);
+        this.password.setSize(100, 20);
+        this.username.setMaximumSize(new Dimension(100,20));
+        this.password.setMaximumSize(new Dimension(100,20));
 
-        user.setLayout(new BoxLayout(this.user, BoxLayout.X_AXIS));
-        user.add(new JLabel("Username: "));
-        user.add(this.username);
-        user.setAlignmentX(Component.CENTER_ALIGNMENT);
-        user.setAlignmentY(Component.CENTER_ALIGNMENT);
-        pass.setLayout(new BoxLayout(this.pass, BoxLayout.X_AXIS));
-        pass.add(new JLabel("Password: "));
-        pass.add(this.password);
-        pass.setAlignmentX(Component.CENTER_ALIGNMENT);
-        pass.setAlignmentY(Component.CENTER_ALIGNMENT);
+        this.user.setLayout(new BoxLayout(this.user, BoxLayout.X_AXIS));
+        this.user.add(new JLabel("Username: "));
+        this.user.add(this.username);
+        this.user.setAlignmentX(Component.CENTER_ALIGNMENT);
+        this.user.setAlignmentY(Component.CENTER_ALIGNMENT);
+        this.pass.setLayout(new BoxLayout(this.pass, BoxLayout.X_AXIS));
+        this.pass.add(new JLabel("Password: "));
+        this.pass.add(this.password);
+        this.pass.setAlignmentX(Component.CENTER_ALIGNMENT);
+        this.pass.setAlignmentY(Component.CENTER_ALIGNMENT);
 
-        registrierPanel.setLayout(new BoxLayout(this.registrierPanel, BoxLayout.Y_AXIS));
-        registrierPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
-        registrierPanel.setAlignmentY(Component.CENTER_ALIGNMENT);
+        this.registrierPanel.setLayout(new BoxLayout(this.registrierPanel, BoxLayout.Y_AXIS));
+        this.registrierPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        this.registrierPanel.setAlignmentY(Component.CENTER_ALIGNMENT);
 
         
        
-        buttons.setLayout(new BoxLayout(this.buttons, BoxLayout.X_AXIS));
-        buttons.add(this.anmelden);
-        buttons.add(this.registrieren);
-        absenden.setEnabled(false);
-        anmelden.setEnabled(false);
-        registrieren.setEnabled(false);
+        this.buttons.setLayout(new BoxLayout(this.buttons, BoxLayout.X_AXIS));
+        this.buttons.add(this.anmelden);
+        this.buttons.add(this.registrieren);
+        this.absenden.setEnabled(false);
+        this. anmelden.setEnabled(false);
+        this.registrieren.setEnabled(false);
         
-        registrierPanel.add(Box.createVerticalGlue());
-        registrierPanel.add(this.user);
-        registrierPanel.add(this.pass);
-        registrierPanel.add(this.buttons);
-        registrierPanel.add(Box.createVerticalGlue());
+        this.registrierPanel.add(Box.createVerticalGlue());
+        this.registrierPanel.add(this.user);
+        this.registrierPanel.add(this.pass);
+        this.registrierPanel.add(this.buttons);
+        this.registrierPanel.add(Box.createVerticalGlue());
 
         
-        center.add(this.abmelden);
-        center.add(this.nutzerliste);
+        //center.add(this.abmelden);
+        
 
         
 
-        username.getDocument().addDocumentListener(new DocumentListener() {
+        this.username.getDocument().addDocumentListener(new DocumentListener() {
 
             @Override
             public void insertUpdate(DocumentEvent e) {
@@ -155,7 +196,7 @@ public class UI extends JFrame{
 
         });
 
-        password.getDocument().addDocumentListener(new DocumentListener() {
+        this.password.getDocument().addDocumentListener(new DocumentListener() {
 
             @Override
             public void insertUpdate(DocumentEvent e) {
@@ -187,7 +228,7 @@ public class UI extends JFrame{
 
         });
 
-        textArea.getDocument().addDocumentListener(new DocumentListener() {
+        this.textArea.getDocument().addDocumentListener(new DocumentListener() {
 
             @Override
             public void insertUpdate(DocumentEvent e) {
@@ -219,7 +260,7 @@ public class UI extends JFrame{
 
         });
 
-        anmelden.addActionListener(new ActionListener() {
+        this.anmelden.addActionListener(new ActionListener() {
 
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -233,7 +274,18 @@ public class UI extends JFrame{
             
         });
 
-        abmelden.addActionListener(new ActionListener() {
+        this.absenden.addActionListener(new ActionListener() {
+
+            @Override
+            public void actionPerformed(ActionEvent e) {
+
+                model.addElement("add");
+                return;
+            }
+            
+        });
+
+        this.abmelden.addActionListener(new ActionListener() {
 
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -246,7 +298,7 @@ public class UI extends JFrame{
             
         });
 
-        registrieren.addActionListener(new ActionListener() {
+        this.registrieren.addActionListener(new ActionListener() {
 
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -261,23 +313,23 @@ public class UI extends JFrame{
         
         // SouthPanel
 
-        textArea.setEditable(false);
+        this.textArea.setEditable(false);
 
-        areaScrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
-        areaScrollPane.setPreferredSize(new Dimension(250,80));
+        this.areaScrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
+        this.areaScrollPane.setPreferredSize(new Dimension(250,80));
         
-        textArea.setWrapStyleWord(true);
-        textArea.setLineWrap(true);
-        textArea.setAutoscrolls(true);
-        textArea.setMaximumSize(new Dimension(100, 100));
-        textArea.setMinimumSize(new Dimension(100,100));
+        this.textArea.setWrapStyleWord(true);
+        this.textArea.setLineWrap(true);
+        this.textArea.setAutoscrolls(true);
+        this.textArea.setMaximumSize(new Dimension(100, 100));
+        this.textArea.setMinimumSize(new Dimension(100,100));
         
        
 
         
         
-        southPanel.add(this.areaScrollPane);
-        southPanel.add(this.absenden);
+        this.southPanel.add(this.areaScrollPane);
+        this.southPanel.add(this.absenden);
         
         //frame.add(southPanel, BorderLayout.SOUTH);
 
