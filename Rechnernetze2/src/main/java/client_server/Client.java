@@ -24,6 +24,10 @@ public class Client
 
 	public Client()
 	{
+		connectToServer();
+	}
+
+	private void connectToServer(){
 		try
 		{
 			socket = new Socket("localhost", 27999);
@@ -32,63 +36,81 @@ public class Client
 		}
 		catch (IOException e)
 		{
+			
 			e.printStackTrace();
 		}
 	}
 
 	
-	public void sendText(final String text)
+	public String sendText(final String text)
 	{
+		String line = "";
 		try
 		{
 			System.out.println("Sende an Server: " + text);
-			writer.write(text + "\n");
+			writer.write(text + " \n");
 			writer.flush();
 
-			final String line = reader.readLine();
+			line = reader.readLine();
 			System.out.println("Vom Server empfangen: " + line);
+			
+		}catch(SocketException e){
+			
 		}
 		catch (IOException e)
 		{
 			e.printStackTrace();
-		}
+		} 
+
+		return line;
 	}
 
 	
 	public void close()
 	{
-		try
-		{
+		
 			
-			sendText("3 " + benutzername);
-			socket.close();
+			
+			try
+		{
+			System.out.println("Sende an Server: " + "3 " + benutzername);
+			final String text = sendText("3 " + benutzername);
+			
+
+			if(text.equals("200")){
+				socket.close();
+			}
+
+			
+			
 		}
 		catch (IOException e)
 		{
 			e.printStackTrace();
+		} catch(NullPointerException e){
+
 		}
+			
+		
+		
 	}
 
 	
 	public void udpConnection(String name) {	
 		int port = -1;
 		String host = "";
-		try
-		{
-			System.out.println("Sende an Server: " + "2 " + name);
-			writer.write("2 " + name + "\n");
-			writer.flush();
+		
+			
+			
+			
 
-			final String text = reader.readLine();
-			System.out.println("Vom Server empfangen: " + text);
-			String [] s = text.split(" ");
-			port = Integer.parseInt(s[0]);
-			host = s[1];
-		}
-		catch (IOException e)
-		{
-			e.printStackTrace();
-		}
+		final String text = sendText("2 " + name );
+		
+
+		String [] s = text.split(" ");
+		port = Integer.parseInt(s[0]);
+		host = s[1];
+		
 		
 		BufferedReader inFromUser = new BufferedReader(new InputStreamReader(System.in));
 		        
@@ -119,21 +141,14 @@ public class Client
 	public String requestActiveUser(){
 		String line ="7 " + benutzername;
 
-		try{
-			writer.write(line + " \n");
-			writer.flush();
+		
+		final String text = sendText(line);
 
-			final String text = reader.readLine();
+		
+		return text;
+		
 
-			
-			return text;
-		}
-		catch (IOException e)
-		{
-			e.printStackTrace();
-		}
-
-		return null;
+		
 	}
 	
 	public boolean login(String username, String password, String option) {
@@ -145,23 +160,16 @@ public class Client
 
 		line = option + " " + username + " " + reverse;
 
-		try
-		{
-			System.out.println("Sende an Server: " + line);
-			writer.write(line + "\n");
-			writer.flush();
+		
+		final String text = sendText(line);
 
-			final String text = reader.readLine();
-			System.out.println("Vom Server empfangen: " + text);
-			if (text.trim().equals("200")) {
-				benutzername = username;
-				return true;
-			}
+		
+		
+		if (text.trim().equals("200")) {
+			benutzername = username;
+			return true;
 		}
-		catch (IOException e)
-		{
-			e.printStackTrace();
-		}
+		
 
 		return false;
 	}

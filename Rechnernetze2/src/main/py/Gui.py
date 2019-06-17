@@ -1,4 +1,4 @@
-from Rechnernetze2.src.main.py.appJar import gui
+from Rechnernetze2.src.main.py.appjar import gui
 
 
 def press(button):

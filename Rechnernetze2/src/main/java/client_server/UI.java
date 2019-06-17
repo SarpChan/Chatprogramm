@@ -10,6 +10,8 @@ import java.awt.GridLayout;
 import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.beans.PropertyChangeEvent;
@@ -29,49 +31,74 @@ import javax.swing.JScrollBar;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
+import javax.swing.ListSelectionModel;
 import javax.swing.SwingUtilities;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
 
-
-
-
-
-public class UI extends JFrame{
+public class UI extends JFrame {
 
     static GraphicsConfiguration gc;
-    private JPanel southPanel, registrierPanel,  user, pass, buttons, center;
+    private JPanel chatEingabePanel, registrierPanel, user, pass, buttons, nutzerListPanel, chatFensterPanel;
     private JTextArea textArea;
-    private JScrollPane areaScrollPane, nutzerAnzeige;
+    private JScrollPane areaScrollPane, nutzerAnzeige, chatFenster;
     private JTextField username;
     private JPasswordField password;
     private JButton absenden, registrieren, anmelden, abmelden;
     private Client client;
-    private JList<String> nutzerliste;
-    private DefaultListModel <String> model;
+    private CustomJList<String> nutzerliste, nachrichten;
+    private DefaultListModel<String> nutzerModel, chatModel;
     private Dimension centerDim;
-    
 
-    
-
-
-
-    public UI(Client cl){
+    public UI(Client cl) {
         super(gc);
         this.client = cl;
 
         setLayout(new BorderLayout());
 
-        this.centerDim = new Dimension(400,450);
+        this.centerDim = new Dimension(400, 450);
 
-        this.southPanel = new JPanel(new FlowLayout());
+        this.chatEingabePanel = new JPanel(new FlowLayout());
         this.textArea = new JTextArea(4, 20);
         this.areaScrollPane = new JScrollPane(this.textArea);
         this.registrierPanel = new JPanel();
-        this.model = new DefaultListModel<>();
-        
-        this.nutzerliste = new JList<>(model);
+        this.nutzerModel = new DefaultListModel<>();
+        this.chatModel = new DefaultListModel<>();
+
+        this.nutzerliste = new CustomJList<>(nutzerModel);
         this.nutzerAnzeige = new JScrollPane(this.nutzerliste);
+        this.nutzerliste.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+
+        this.nachrichten = new CustomJList<>(chatModel);
+        this.chatFenster = new JScrollPane(this.nachrichten);
+        this.chatFensterPanel = new JPanel();
+
+        this.nutzerliste.addMouseListener(new MouseAdapter(){
+            @Override 
+            public void mouseClicked(MouseEvent e){
+                JList list = (JList) e.getSource();
+                if(list.locationToIndex(e.getPoint()) == -1 ){
+                    list.clearSelection();
+                } else{
+                    switchView(Views.CHAT);
+                }
+                
+            }
+        });
+        // this.nutzerliste.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
+
+        //     @Override
+        //     public void valueChanged(ListSelectionEvent e) {
+                
+        //         if( nutzerliste.getSelectedValue() != null){
+        //             //switchView(Views.CHAT); 
+        //         }
+                
+        //     }
+
+        // });
         
         
         
@@ -81,7 +108,7 @@ public class UI extends JFrame{
         public void windowClosing(WindowEvent event) {
             exitProcedure();
         }
-    });
+        });
        
 
 
@@ -89,22 +116,27 @@ public class UI extends JFrame{
         //this.nutzerliste.setCellRenderer(new NutzerlisteRenderer());
         
         
-        this.center = new JPanel();
+        this.nutzerListPanel = new JPanel();
         
        
         
-        this.center.setPreferredSize(this.centerDim);
-        this.center.setMaximumSize(this.centerDim);
+        this.nutzerListPanel.setPreferredSize(this.centerDim);
+        this.nutzerListPanel.setMaximumSize(this.centerDim);
         this.nutzerAnzeige.setPreferredSize(this.centerDim);
         this.nutzerAnzeige.setMaximumSize(this.centerDim);
+
+        this.chatFensterPanel.setPreferredSize(this.centerDim);
+        this.chatFensterPanel.setMaximumSize(this.centerDim);
+        this.chatFenster.setPreferredSize(this.centerDim);
+        this.chatFenster.setMaximumSize(this.centerDim);
         
         
         
         
         
 
-        
-        this.center.add(this.nutzerAnzeige);
+        this.chatFensterPanel.add(this.chatFenster);
+        this.nutzerListPanel.add(this.nutzerAnzeige);
 
         this.user = new JPanel();
         this.pass = new JPanel();
@@ -128,6 +160,7 @@ public class UI extends JFrame{
 
         // LoginPanel
         this.nutzerliste.setBackground(Color.GRAY);
+        this.nachrichten.setBackground(Color.GRAY);
 
         
 
@@ -276,7 +309,7 @@ public class UI extends JFrame{
                 if(client.login(username.getText(), password.getText(), "1")) {
                     
                     switchView(Views.HOME);
-                    updateNutzerListe();
+                    //updateNutzerListe();
                 }
 
                 return;
@@ -340,8 +373,8 @@ public class UI extends JFrame{
 
         
         
-        this.southPanel.add(this.areaScrollPane);
-        this.southPanel.add(this.absenden);
+        this.chatEingabePanel.add(this.areaScrollPane);
+        this.chatEingabePanel.add(this.absenden);
         
         //frame.add(southPanel, BorderLayout.SOUTH);
 
@@ -375,17 +408,37 @@ public class UI extends JFrame{
                         validate();
 
                         
-                        add(center, BorderLayout.CENTER);
+                        add(nutzerListPanel, BorderLayout.CENTER);
                         
-                        textArea.setEditable(true);
+                        absenden.setEnabled(true);
                         
-                        add(southPanel, BorderLayout.SOUTH);
+                        add(absenden, BorderLayout.SOUTH);
                         
                         validate();                        
             
                         repaint();
             
                     } else if( whereTo == Views.CHAT){
+
+                        String targetClient = nutzerliste.getSelectedValue();
+                        //TODO targetClient an Client senden, Socket zwischen target und self erstellen
+                        //TODO Nachrichten laden, speichern, etc.
+
+                        getContentPane().removeAll();
+                        repaint();
+                        validate();
+
+                        
+                        add(chatFensterPanel, BorderLayout.CENTER);
+                        
+                        textArea.setEditable(true);
+                        
+                        add(chatEingabePanel, BorderLayout.SOUTH);
+                        
+                        validate();                        
+            
+                        repaint();
+                        
             
                     }
                 }
@@ -402,10 +455,10 @@ public class UI extends JFrame{
         {
             String [] liste = text.split(" ");
 
-            model.clear();
+            nutzerModel.clear();
 
             for (String ele : liste) {
-                model.addElement(ele);
+                nutzerModel.addElement(ele);
             }
         }
     

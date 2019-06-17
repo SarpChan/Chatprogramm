@@ -28,14 +28,14 @@ public class Teilserver {
             this.writer = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
             this.socket = socket;
         } catch (IOException e) {
-            // TODO Auto-generated catch block
+            
             e.printStackTrace();
         }
 		
         
     }
 
-    public void handleRequests()
+    public synchronized void handleRequests()
 	{
 		while (!socket.isClosed())
 		{
@@ -44,6 +44,7 @@ public class Teilserver {
 			{
 				line = reader.readLine();
 				System.out.printf("Vom Client (%s) empfangen: %s%n", socket.getRemoteSocketAddress(), line);
+
 				// Registrieren
 				String eingabe[] = line.split(" ");
 
@@ -52,6 +53,7 @@ public class Teilserver {
 					handleRegistrieren(eingabe, socket);
 					break;
 				case "1":
+					System.out.println(socket);
 					handleAnmelden(eingabe, socket);
 					break;
 				case "2":
@@ -61,6 +63,7 @@ public class Teilserver {
 					handleAbmelden(eingabe);
 					break;
 				case "7":
+				
 					handleActiveUserReq(eingabe);
 					break;
 				default:
@@ -86,6 +89,7 @@ public class Teilserver {
 
 				if (!element.equalsIgnoreCase(eingabe[1].trim())){
 					writer.write(element + " ");
+					System.out.println(element);
 				}
 				
 				
@@ -130,7 +134,7 @@ public class Teilserver {
 				if(!nutzerverw.isUserActive(benutzername)) {
 					System.out.println("Eingeloggt");
 					try {
-						aktiveNutzer.put(benutzername, socket);
+						nutzerverw.addActiveUser(benutzername, socket);
 						writer.write("200 \n");
 					} catch (IOException e) {
 						e.printStackTrace();
@@ -177,6 +181,16 @@ public class Teilserver {
 	public void handleAbmelden(String [] line) {
 		String benutzername = line[1];
 		nutzerverw.removeActiveUser(benutzername);
+		try {
+			writer.write("200" + "\n");
+			socket.close();
+		} catch (IOException e) {
+			
+			e.printStackTrace();
+		}
+		
+		
+
     }
     
     public Map<String, String> getNutzer() {
