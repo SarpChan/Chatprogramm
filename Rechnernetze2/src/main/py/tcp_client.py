@@ -18,7 +18,8 @@ serverName = "localhost"
 
 # STUDENTS - you should randomize your port number.
 # This port number in practice is often a "Well Known Number"
-serverPort = 12000
+#serverPort = 12000
+serverPort = 27999
 
 # create TCP socket on client to use for connecting to remote
 # server.  Indicate the server's remote listening port
@@ -30,8 +31,19 @@ clientSocket.connect((serverName,serverPort))
 
 # interactively get user's line to be converted to upper case
 # authors' use of raw_input changed to input for Python 3  Amer 4-2013
+
 sentence = raw_input("Input lowercase sentence: ")
 
+
+'''while True:
+      
+    Nachricht = input("Your Message:")
+    if Nachricht != "":
+        b = client_socket.sendall(bytes(Nachricht, "utf8"))      
+        print(b)
+    else:
+        print("Type in your Message")'''
+ 
 # send the user's line over the TCP connection
 # No need to specify server name, port
 # sentence casted to bytes for Python 3  Amer 4-2013

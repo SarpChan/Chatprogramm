@@ -18,6 +18,7 @@ serverName = "localhost"
 # STUDENTS - randomize your port number (use the same one in the server)
 # This port number in practice is often a "Well Known Number"
 serverPort = 12000
+#serverPort = 27999
 
 # create UDP socket
 # Error in book? clientSocket = socket(socket.AF_INET, socket.SOCK_DGRAM)

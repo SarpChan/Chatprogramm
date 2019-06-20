@@ -10,7 +10,8 @@ Use the better name for this module:    MakeUpperCaseServerUsingUDP
   This module will <blah, blah, blah>
 """
 
-from socket import *
+from socket import AF_INET, socket, SOCK_STREAM
+from threading import Thread
 
 # STUDENTS - you should randomize your port number.
 # This port number in practice is often a "Well Known Number"
