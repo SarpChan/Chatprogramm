@@ -63,7 +63,6 @@ public class Teilserver {
 					handleAbmelden(eingabe);
 					break;
 				case "7":
-				
 					handleActiveUserReq(eingabe);
 					break;
 				default:
@@ -91,8 +90,6 @@ public class Teilserver {
 					writer.write(element + " ");
 					System.out.println(element);
 				}
-				
-				
 			} 
 			writer.write("\n");
 		}
@@ -100,6 +97,7 @@ public class Teilserver {
 			e.printStackTrace();
 		}
     }
+    
     
     public void handleRegistrieren(String[] line, Socket socket) {
 		String benutzername = line[1];
@@ -123,6 +121,7 @@ public class Teilserver {
 			}
 		}
     }
+    
     
     public void handleAnmelden(String []line, Socket socket) {
 		String benutzername = line[1];
@@ -165,15 +164,29 @@ public class Teilserver {
 		}		
     }
     
+    
     public void handleChat(String []line, Socket socket) {
 		Socket chatPartnerSocket = nutzerverw.getActiveUserSocket(line[1]);
 		int port = chatPartnerSocket.getPort();
 		InetAddress ip = chatPartnerSocket.getInetAddress();
+		String answer = "";
 		
 		try {
-			writer.write(String.valueOf(port) + " " + ip.getHostName() + "\n");
-		} catch (IOException e) {
-			e.printStackTrace();
+			BufferedReader chatPartnerReader = new BufferedReader(new InputStreamReader(chatPartnerSocket.getInputStream()));
+			BufferedWriter chatPartnerWriter = new BufferedWriter(new OutputStreamWriter(chatPartnerSocket.getOutputStream()));
+			
+			chatPartnerWriter.write("Neue Chatanfrage");
+			chatPartnerWriter.flush();
+			answer = chatPartnerReader.readLine();
+			
+			if(answer.equals("yes")) {
+				writer.write(String.valueOf(port) + " " + ip.getHostName() + "\n");
+				chatPartnerWriter.write(String.valueOf(socket.getPort()) + " " + socket.getInetAddress().getHostName() + "\n");
+			} else {
+				writer.write("Der User möchte gerade nicht mit dir chatten.");
+			}
+		} catch (IOException e1) {
+			e1.printStackTrace();
 		}
 	}
 	
@@ -185,14 +198,11 @@ public class Teilserver {
 			writer.write("200" + "\n");
 			socket.close();
 		} catch (IOException e) {
-			
 			e.printStackTrace();
 		}
-		
-		
-
     }
     
+	
     public Map<String, String> getNutzer() {
 		return nutzer;
     }

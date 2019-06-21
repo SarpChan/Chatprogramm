@@ -20,6 +20,8 @@ public class Client
 	private BufferedWriter writer;
 	private BufferedReader reader;
 	private String benutzername = "";
+	private Thread receivingThread = null;
+	private Thread sendingThread = null;
 
 
 	public Client()
@@ -36,12 +38,11 @@ public class Client
 		}
 		catch (IOException e)
 		{
-			
 			e.printStackTrace();
 		}
 	}
 
-	
+
 	public String sendText(final String text)
 	{
 		String line = "";
@@ -53,104 +54,131 @@ public class Client
 
 			line = reader.readLine();
 			System.out.println("Vom Server empfangen: " + line);
-			
-		}catch(SocketException e){
-			
+
+		} catch(SocketException e){
+			e.printStackTrace();
 		}
 		catch (IOException e)
 		{
 			e.printStackTrace();
 		} 
-
 		return line;
 	}
 
-	
+
 	public void close()
 	{
-		
-			
-			
-			try
+		try
 		{
 			System.out.println("Sende an Server: " + "3 " + benutzername);
 			final String text = sendText("3 " + benutzername);
-			
 
 			if(text.equals("200")){
 				socket.close();
 			}
-
-			
-			
 		}
 		catch (IOException e)
 		{
 			e.printStackTrace();
 		} catch(NullPointerException e){
-
+			e.printStackTrace();
 		}
-			
-		
-		
 	}
 
-	
-	public void udpConnection(String name) {	
-		int port = -1;
-		String host = "";
-		
-			
-			
-			
 
-		final String text = sendText("2 " + name );
-		
+	public void requestUdpConnection(String name) {	
+		final String text = sendText("2 " + name);
 
 		String [] s = text.split(" ");
-		port = Integer.parseInt(s[0]);
-		host = s[1];
-		
-		
-		BufferedReader inFromUser = new BufferedReader(new InputStreamReader(System.in));
-		        
-		 try {
-			DatagramSocket clientSocket = new DatagramSocket(); 
-			InetAddress IPAddress = InetAddress.getByName(host);
-			byte[] sendData = new byte[1024];        
-			byte[] receiveData = new byte[1024];        
-			String sentence = inFromUser.readLine();        
-			sendData = sentence.getBytes();
-			 
-			DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, IPAddress, port);        
-			clientSocket.send(sendPacket);        
-			DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);        
-			clientSocket.receive(receivePacket);        
-			String modifiedSentence = new String(receivePacket.getData());        
-			System.out.println("FROM SERVER:" + modifiedSentence);        
-			clientSocket.close(); 
-		} catch (UnknownHostException e) {
-			e.printStackTrace();
-		} catch (SocketException e) {
-			e.printStackTrace();
+
+		int chatPort = -1;
+		String chatHost = "";	
+
+		buildUdpConnection(chatPort, chatHost);
+	}
+
+
+	public void answerUdpConnection() {	
+
+	}
+
+
+	public void buildUdpConnection(Integer chatPort, String chatHost) {
+
+		receivingThread = new Thread() {
+			byte[] receiveData = new byte[1024];
+			DatagramSocket clientSocket = null;
+
+			@Override
+			public void run()
+			{
+				try {
+					clientSocket = new DatagramSocket();
+				} catch (SocketException e1) {
+					e1.printStackTrace();
+				}
+				DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);        
+				try {
+					clientSocket.receive(receivePacket);
+				} catch (IOException e) {
+					e.printStackTrace();
+				}        
+				String modifiedSentence = new String(receivePacket.getData());        
+				System.out.println("FROM SERVER:" + modifiedSentence);       
+			}
+		};
+		receivingThread.start();
+
+		sendingThread = new Thread() {
+			byte[] sendData = new byte[1024]; 
+			DatagramSocket clientSocket = null;
+			InetAddress IPAddress = null;
+
+			@Override
+			public void run()
+			{
+				try {
+					clientSocket = new DatagramSocket();
+					IPAddress = InetAddress.getByName(chatHost);
+				} catch (SocketException e) {
+					e.printStackTrace();
+				} catch (UnknownHostException e) {
+					e.printStackTrace();
+				}
+				BufferedReader inFromUser = new BufferedReader(new InputStreamReader(System.in));
+				String sentence = "";
+				try {
+					sentence = inFromUser.readLine();
+					sendData = sentence.getBytes();
+					DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, IPAddress, chatPort);        
+					clientSocket.send(sendPacket);
+				} catch (IOException e) {
+					e.printStackTrace();
+				}        
+			}
+		};
+		sendingThread.start();
+	}
+
+
+	public void endUdpConnection(Socket clientSocket) {
+		try {
+			clientSocket.close();
 		} catch (IOException e) {
 			e.printStackTrace();
-		}        
+		}
 	}
-	
+
+
 	public String requestActiveUser(){
 		String line ="7 " + benutzername;
 
-		
 		final String text = sendText(line);
 
-		
-		return text;
-		
-
-		
+		return text;	
 	}
-	
+
+
 	public boolean login(String username, String password, String option) {
 		String line;
 		System.out.println("Registrieren");
@@ -160,29 +188,22 @@ public class Client
 
 		line = option + " " + username + " " + reverse;
 
-		
 		final String text = sendText(line);
 
-		
-		
 		if (text.trim().equals("200")) {
 			benutzername = username;
 			return true;
 		}
-		
-
 		return false;
 	}
-	
-	
+
+
 	public static void main(String[] args) throws IOException
 	{
 		final Client client = new Client();
 		UI gui = new UI(client);
 
 		gui.setVisible(true);
-
-	
 	}
 
 }

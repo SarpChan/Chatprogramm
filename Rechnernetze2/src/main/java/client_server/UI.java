@@ -83,6 +83,9 @@ public class UI extends JFrame {
                     list.clearSelection();
                 } else{
                     switchView(Views.CHAT);
+                    int index = list.locationToIndex(e.getPoint());
+                    Object name = list.getModel().getElementAt(index);
+                    client.requestUdpConnection(name.toString());
                 }
                 
             }
