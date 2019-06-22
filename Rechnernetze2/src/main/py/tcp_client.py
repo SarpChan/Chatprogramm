@@ -67,16 +67,19 @@ class ClientPy:
        
         self.clientSocket = socket(AF_INET, SOCK_STREAM)
         self.clientSocket.connect((serverName,serverPort))
-        benutzername = ""
+        self.benutzername = ""
         
     def sendText(self,text):
         
-        print("Sende an Server" + text)
-        self.clientSocket.sendall(text + "/n")
+        print("Sende an Server " + text)
+        text = text + " \n"
+        print(text.encode())
         
-        antwort = client_Socket.recv(1024)
-        print("Vom Server empfangen: " + antwort)
-        return antwort
+        self.clientSocket.sendall(text.encode())
+        antwort = self.clientSocket.recv(1024)
+        print("Vom Server empfangen: " + str(antwort))
+            
+        return str(antwort)
         
         
 
@@ -87,7 +90,7 @@ class ClientPy:
         
         antwort = sendText(line)
         if antwort.equal("200"):
-            benutzername = username;
+            self.benutzername = username;
             return True
         return False
         
@@ -101,12 +104,14 @@ class ClientPy:
         text = sendText("7 " + benutzername)
         return text
 
+def main():   
+    c = ClientPy()
+    #Registrieren:
     
-c = ClientPy()
-#Registrieren:
-antwort = c.sendText("0 name passwort")    
-print(antwort)
-    
+    antwort = c.sendText("0 a b")   
+   
+        
+main()
 
 
 
