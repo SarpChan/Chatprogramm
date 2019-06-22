@@ -75,7 +75,7 @@ class ClientPy:
         text = text + " \n"
         print(text.encode())
         
-        self.clientSocket.sendall(text.encode())
+        self.clientSocket.send(text.encode())
         antwort = self.clientSocket.recv(1024)
         print("Vom Server empfangen: " + str(antwort))
             
@@ -95,13 +95,17 @@ class ClientPy:
         return False
         
     def closeConnection(self):
-        text = sendText("3 " + benutzername)
-        
-        if text.equals("200"):
+        #if self.benutzername != "":
+        text = self.sendText("3 " + self.benutzername)
+            
+        if text.rfind("200"):
             self.clientSocket.close()
         
+        
+        
+        
     def requestActiveUser(self):
-        text = sendText("7 " + benutzername)
+        text = self.sendText("7 " + self.benutzername)
         return text
 
 def main():   
@@ -109,7 +113,7 @@ def main():
     #Registrieren:
     
     antwort = c.sendText("0 a b")   
-   
+    c.closeConnection()
         
 main()
 
