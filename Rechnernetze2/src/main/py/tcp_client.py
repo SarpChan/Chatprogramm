@@ -14,17 +14,17 @@ Use the better name for this module:   MakeUpperCaseClientUsingTCP
 from socket import *
 
 # STUDENTS - replace your server machine's name
-serverName = "localhost"
+'''serverName = "localhost"
 
 # STUDENTS - you should randomize your port number.
 # This port number in practice is often a "Well Known Number"
 #serverPort = 12000
-serverPort = 27999
+serverPort = 27999'''
 
 # create TCP socket on client to use for connecting to remote
 # server.  Indicate the server's remote listening port
 # Error in textbook?   socket(socket.AF_INET, socket.SOCK_STREAM)  Amer 4-2013
-clientSocket = socket(AF_INET, SOCK_STREAM)
+'''clientSocket = socket(AF_INET, SOCK_STREAM)
 
 # open the TCP connection
 clientSocket.connect((serverName,serverPort))
@@ -32,26 +32,21 @@ clientSocket.connect((serverName,serverPort))
 # interactively get user's line to be converted to upper case
 # authors' use of raw_input changed to input for Python 3  Amer 4-2013
 
-sentence = raw_input("Input lowercase sentence: ")
+#sentence = raw_input("Input lowercase sentence: ")
 
 
-'''while True:
-      
-    Nachricht = input("Your Message:")
-    if Nachricht != "":
-        b = client_socket.sendall(bytes(Nachricht, "utf8"))      
-        print(b)
-    else:
-        print("Type in your Message")'''
+
  
 # send the user's line over the TCP connection
 # No need to specify server name, port
 # sentence casted to bytes for Python 3  Amer 4-2013
 
-clientSocket.sendall(sentence)
+#clientSocket.sendall(sentence)
+#client_socket.sendall(bytes(sentence , "utf8"))  
 
+clientSocket.sendall("hello/n")
 #output to console what is sent to the server
-print ("Sent to Make Upper Case Server: ", sentence)
+#print ("Sent to Server: ", sentence)
 
 # get user's line back from server having been modified by the server
 modifiedSentence = clientSocket.recv(1024)
@@ -60,4 +55,59 @@ modifiedSentence = clientSocket.recv(1024)
 print ("Received from Make Upper Case Server: ", modifiedSentence)
 
 # close the TCP connection
-clientSocket.close()
+clientSocket.close()'''
+
+
+
+serverName = "localhost"
+serverPort = 27999
+
+class ClientPy:
+    def __init__(self):
+       
+        self.clientSocket = socket(AF_INET, SOCK_STREAM)
+        self.clientSocket.connect((serverName,serverPort))
+        benutzername = ""
+        
+    def sendText(self,text):
+        
+        print("Sende an Server" + text)
+        self.clientSocket.sendall(text + "/n")
+        
+        antwort = client_Socket.recv(1024)
+        print("Vom Server empfangen: " + antwort)
+        return antwort
+        
+        
+
+    def login(self,username, password, option, client_Socket):
+        print("login")
+        password = passwort.reverse()
+        line = option + " " + username + " " + password;
+        
+        antwort = sendText(line)
+        if antwort.equal("200"):
+            benutzername = username;
+            return True
+        return False
+        
+    def closeConnection(self):
+        text = sendText("3 " + benutzername)
+        
+        if text.equals("200"):
+            self.clientSocket.close()
+        
+    def requestActiveUser(self):
+        text = sendText("7 " + benutzername)
+        return text
+
+    
+c = ClientPy()
+#Registrieren:
+antwort = c.sendText("0 name passwort")    
+print(antwort)
+    
+
+
+
+
