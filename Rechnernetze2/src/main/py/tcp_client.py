@@ -73,7 +73,7 @@ class ClientPy:
         
         print("Sende an Server " + text)
         text = text + " \n"
-        print(text.encode())
+        #print(text.encode())
         
         self.clientSocket.send(text.encode())
         antwort = self.clientSocket.recv(1024)
@@ -83,16 +83,17 @@ class ClientPy:
         
         
 
-    def login(self,username, password, option, client_Socket):
+    def login(self,username, password, option):
         print("login")
-        password = passwort.reverse()
+        password = password[::-1] 
         line = option + " " + username + " " + password;
         
-        antwort = sendText(line)
-        if antwort.equal("200"):
+        antwort = self.sendText(line)
+        if "200" in antwort:
             self.benutzername = username;
             return True
         return False
+    
         
     def closeConnection(self):
         #if self.benutzername != "":
@@ -100,6 +101,7 @@ class ClientPy:
             
         if text.rfind("200"):
             self.clientSocket.close()
+           
         
         
         
@@ -108,12 +110,31 @@ class ClientPy:
         text = self.sendText("7 " + self.benutzername)
         return text
 
+
+    def requestUdpConnection(self, name):
+        antwort = self.sendText("2 " + name)
+        print("tetst ", anwort)
+        
+        
 def main():   
     c = ClientPy()
-    #Registrieren:
     
-    antwort = c.sendText("0 a b")   
-    c.closeConnection()
+    #Registrieren:
+    log = c.login("o", "p", "0")
+    print(log)
+    #while True:
+    
+        
+    c.requestUdpConnection("i")
+    #antwort = c.sendText("0 a b") 
+    
+     
+        #
+        #sentence = input("Input lowercase sentence: ")
+        #c.sendText(sentence)
+        
+        
+    #c.closeConnection()
         
 main()
 
