@@ -28,13 +28,11 @@ public class Teilserver {
             this.writer = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
             this.socket = socket;
         } catch (IOException e) {
-            
             e.printStackTrace();
         }
-		
-        
     }
 
+    
     public synchronized void handleRequests()
 	{
 		while (!socket.isClosed())
@@ -66,11 +64,10 @@ public class Teilserver {
 					handleActiveUserReq(eingabe);
 					break;
 				default:
-					System.out.println(line);
+					System.out.println("default " + line);
 					writer.write("default \n");
 					break;
 				}
-				
 				writer.flush();
 			}
 			catch (IOException e)
@@ -81,13 +78,13 @@ public class Teilserver {
 		}
     }
     
+    
     private void handleActiveUserReq(String [] eingabe) {
 		List <String> tempSet = getAktiveNutzer();
-		try{
+		try {
 			for (String element : tempSet) {
-
 				if (!element.equalsIgnoreCase(eingabe[1].trim())){
-					writer.write(element + " ");
+					writer.write("7 " + element + " ");
 					System.out.println(element);
 				}
 			} 
@@ -109,11 +106,11 @@ public class Teilserver {
 			nutzerverw.addActiveUser(benutzername, socket);
 			
 			try {
-				writer.write("200 \n");
+				writer.write("0 200 \n");
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
-		}else {
+		} else {
 			try {
 				writer.write("Nutzername bereits vergeben \n");
 			} catch (IOException e) {
@@ -134,7 +131,7 @@ public class Teilserver {
 					System.out.println("Eingeloggt");
 					try {
 						nutzerverw.addActiveUser(benutzername, socket);
-						writer.write("200 \n");
+						writer.write("1 200 \n");
 					} catch (IOException e) {
 						e.printStackTrace();
 					}
@@ -175,15 +172,17 @@ public class Teilserver {
 			BufferedReader chatPartnerReader = new BufferedReader(new InputStreamReader(chatPartnerSocket.getInputStream()));
 			BufferedWriter chatPartnerWriter = new BufferedWriter(new OutputStreamWriter(chatPartnerSocket.getOutputStream()));
 			
-			chatPartnerWriter.write("Neue Chatanfrage");
+			chatPartnerWriter.write("Neue Chatanfrage \n");
 			chatPartnerWriter.flush();
+			System.out.println("Chatanfrage gesendet");
 			answer = chatPartnerReader.readLine();
 			
 			if(answer.equals("yes")) {
-				writer.write(String.valueOf(port) + " " + ip.getHostName() + "\n");
+				writer.write("2 " + String.valueOf(port) + " " + ip.getHostName() + "\n");
 				chatPartnerWriter.write(String.valueOf(socket.getPort()) + " " + socket.getInetAddress().getHostName() + "\n");
+				chatPartnerWriter.flush();
 			} else {
-				writer.write("Der User möchte gerade nicht mit dir chatten.");
+				writer.write("Der User möchte gerade nicht mit dir chatten. \n");
 			}
 		} catch (IOException e1) {
 			e1.printStackTrace();
@@ -195,7 +194,7 @@ public class Teilserver {
 		String benutzername = line[1];
 		nutzerverw.removeActiveUser(benutzername);
 		try {
-			writer.write("200" + "\n");
+			writer.write("3 200" + "\n");
 			socket.close();
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -208,7 +207,6 @@ public class Teilserver {
     }
     
     public List<String> getAktiveNutzer() {
-
 		return nutzerverw.getActiveUserlist();
 	}
 
