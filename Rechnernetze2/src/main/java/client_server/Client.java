@@ -79,7 +79,8 @@ public class Client
 	}
 
 
-	private synchronized void processReceived(String line) {
+	private synchronized void processReceived(String line) 
+	{
 		if (line.equals("Neue Chatanfrage")) {
 			answerUdpConnection();
 		} else if (line.startsWith("0 ") || line.startsWith("1 ")) {
