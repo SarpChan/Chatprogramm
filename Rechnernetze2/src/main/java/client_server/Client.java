@@ -21,7 +21,6 @@ public class Client
 
 	private Socket socket;
 	private BufferedWriter writer;
-	//	private BufferedReader reader;
 	private String benutzername = "";
 	private Thread receivingThread = null;
 	private Thread sendingThread = null;
@@ -70,7 +69,6 @@ public class Client
 		{
 			socket = new Socket("localhost", 27999);
 			writer = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
-			//			reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 		}
 		catch (IOException e)
 		{
@@ -81,7 +79,8 @@ public class Client
 
 	private synchronized void processReceived(String line) 
 	{
-		if (line.equals("Neue Chatanfrage")) {
+		if (line.startsWith("5 ")) {
+			System.out.println("chat");
 			answerUdpConnection();
 		} else if (line.startsWith("0 ") || line.startsWith("1 ")) {
 			if (line.trim().endsWith("200")) {
@@ -141,6 +140,7 @@ public class Client
 	//	durch Server uebermittelte Chatanfrage beantworten
 	public void answerUdpConnection() {	
 		setChat(true);
+		System.out.println("wahr");
 	}
 
 

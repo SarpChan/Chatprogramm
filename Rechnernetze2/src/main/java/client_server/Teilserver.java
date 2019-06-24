@@ -172,7 +172,7 @@ public class Teilserver {
 			BufferedReader chatPartnerReader = new BufferedReader(new InputStreamReader(chatPartnerSocket.getInputStream()));
 			BufferedWriter chatPartnerWriter = new BufferedWriter(new OutputStreamWriter(chatPartnerSocket.getOutputStream()));
 			
-			chatPartnerWriter.write("Neue Chatanfrage \n");
+			chatPartnerWriter.write("5 Neue Chatanfrage \n");
 			chatPartnerWriter.flush();
 			System.out.println("Chatanfrage gesendet");
 			answer = chatPartnerReader.readLine();

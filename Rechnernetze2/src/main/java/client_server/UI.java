@@ -351,7 +351,9 @@ public class UI extends JFrame {
 
 
 		this.client.chatanfrage.addListener((observable, oldValue, newValue) -> {
+			System.out.println("Aber hier");
 			if (newValue.booleanValue() == true) {
+				System.out.println("Ich war hier");
 				SwingUtilities.invokeLater(new Runnable()
 				{
 					public void run(){
