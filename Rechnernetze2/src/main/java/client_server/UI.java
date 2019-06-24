@@ -39,10 +39,11 @@ import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
-import javafx.application.Platform;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
+import java.util.Observable;
+
 
 public class UI extends JFrame {
 
@@ -349,19 +350,22 @@ public class UI extends JFrame {
 			}
 		});
 
-
-		this.client.chatanfrage.addListener((observable, oldValue, newValue) -> {
-			System.out.println("Aber hier");
-			if (newValue.booleanValue() == true) {
-				System.out.println("Ich war hier");
-				SwingUtilities.invokeLater(new Runnable()
-				{
-					public void run(){
-						dialog.setVisible(true);
-					}
-				});
-			}
-		});
+        this.client.chatanfrage.setListener(new BooVariable.ChangeListener(){
+        
+            @Override
+            public void onChange() {
+                if(client.chatanfrage.isBoo()){
+                    SwingUtilities.invokeLater(new Runnable()
+                    {
+                        public void run(){
+                            dialog.setVisible(true);
+                        }
+                    });
+                }
+                
+            }
+        });
+		
 
 
 				// SouthPanel
