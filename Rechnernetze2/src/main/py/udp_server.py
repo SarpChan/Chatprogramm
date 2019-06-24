@@ -18,7 +18,7 @@ from threading import Thread
 serverPort = 12000
 
 # create UDP socket and bind to your specified port
-serverSocket = socket(AF_INET, SOCK_DGRAM)
+serverSocket = socket(AF_INET, SOCK_STREAM)
 serverSocket.bind(("", serverPort))
 
 # output to console that server is listening
