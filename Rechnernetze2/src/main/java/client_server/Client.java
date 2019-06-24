@@ -8,8 +8,7 @@ import java.net.Socket;
 import java.net.SocketException;
 import java.net.UnknownHostException;
 
-import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.property.SimpleIntegerProperty;
+
 
 
 // In der line steht 0: fuer registrieren
@@ -27,13 +26,16 @@ public class Client
 	private Thread serverThread = null;
 	private String activeUsers = "";
 	private boolean loggedIn = false;
-	protected SimpleBooleanProperty chatanfrage;
+	protected BooVariable chatanfrage = new BooVariable();
+
 
 
 
 
 	public class ServerThread extends Thread {
 		BufferedReader serverReader;
+
+
 
 		public ServerThread() {
 			try {
@@ -60,7 +62,7 @@ public class Client
 
 	public Client()
 	{
-		this.chatanfrage = new SimpleBooleanProperty(false);
+		this.chatanfrage.setBoo(false);
 		connectToServer();
 	}
 
@@ -278,15 +280,8 @@ public class Client
 	}
 
 
-	public final SimpleBooleanProperty chatProperty() {
-		return this.chatanfrage;
-	}
-
-	public final Boolean getChat() {
-		return this.chatProperty().get();
-	}
 
 	public final void setChat(boolean chatanfrage) {
-		this.chatProperty().set(chatanfrage);
+		this.chatanfrage.setBoo(chatanfrage);
 	}
 }
