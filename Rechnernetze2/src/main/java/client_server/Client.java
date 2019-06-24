@@ -145,9 +145,10 @@ public class Client
 
 
 	public void buildUdpConnection(String line) {
-		int chatPort = -1;
-		String chatHost = "";	
-
+		String [] data = line.split(" ");
+		int chatPort = Integer.parseInt(data[1]);
+		String chatHost = data[2];
+		
 		receivingThread = new Thread() {
 			byte[] receiveData = new byte[1024];
 			DatagramSocket clientSocket = null;
@@ -160,14 +161,16 @@ public class Client
 				} catch (SocketException e1) {
 					e1.printStackTrace();
 				}
-				DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);        
-				try {
-					clientSocket.receive(receivePacket);
-				} catch (IOException e) {
-					e.printStackTrace();
-				}        
-				String modifiedSentence = new String(receivePacket.getData());        
-				System.out.println("FROM SERVER:" + modifiedSentence);       
+				while(true) {
+					DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);        
+					try {
+						clientSocket.receive(receivePacket);
+					} catch (IOException e) {
+						e.printStackTrace();
+					}        
+					String modifiedSentence = new String(receivePacket.getData());        
+					System.out.println("FROM CHATPARTNER:" + modifiedSentence); 
+				}
 			}
 		};
 		receivingThread.start();
@@ -190,14 +193,17 @@ public class Client
 				}
 				BufferedReader inFromUser = new BufferedReader(new InputStreamReader(System.in));
 				String sentence = "";
-				try {
-					sentence = inFromUser.readLine();
-					sendData = sentence.getBytes();
-					DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, IPAddress, chatPort);        
-					clientSocket.send(sendPacket);
-				} catch (IOException e) {
-					e.printStackTrace();
-				}        
+				while(true) {
+					try {
+						sentence = inFromUser.readLine();
+						sendData = sentence.getBytes();
+						DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, IPAddress, chatPort);
+						System.out.println("SENDING" + sentence);
+						clientSocket.send(sendPacket);
+					} catch (IOException e) {
+						e.printStackTrace();
+					}        
+				}
 			}
 		};
 		sendingThread.start();
@@ -258,7 +264,7 @@ public class Client
 			}
 		};
 		client.serverThread.start();
-		
+
 		gui.setVisible(true);
 	}
 
