@@ -35,8 +35,6 @@ public class Client
 	public class ServerThread extends Thread {
 		BufferedReader serverReader;
 
-
-
 		public ServerThread() {
 			try {
 				serverReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
@@ -82,7 +80,6 @@ public class Client
 	private synchronized void processReceived(String line) 
 	{
 		if (line.startsWith("5 ")) {
-			System.out.println("chat");
 			answerUdpConnection();
 		} else if (line.startsWith("0 ") || line.startsWith("1 ")) {
 			if (line.trim().endsWith("200")) {
@@ -104,6 +101,30 @@ public class Client
 	}
 
 
+	public void startServerThread() {
+		serverThread = new Thread() {
+			BufferedReader serverReader;
+
+			@Override
+			public void run()
+			{
+				while(true) {
+					String line = "";
+					try {
+						serverReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+						line = serverReader.readLine();
+						System.out.println("Vom Server empfangen: " + line);
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+					processReceived(line);
+				}
+			}
+		};
+		serverThread.start();
+	}
+	
+	
 	public void sendText(final String text)
 	{
 		try
@@ -142,7 +163,6 @@ public class Client
 	//	durch Server uebermittelte Chatanfrage beantworten
 	public void answerUdpConnection() {	
 		setChat(true);
-		System.out.println("wahr");
 	}
 
 
@@ -246,26 +266,7 @@ public class Client
 		final Client client = new Client();
 		UI gui = new UI(client);
 
-		client.serverThread = new Thread() {
-			BufferedReader serverReader;
-
-			@Override
-			public void run()
-			{
-				while(true) {
-					String line = "";
-					try {
-						serverReader = new BufferedReader(new InputStreamReader(client.socket.getInputStream()));
-						line = serverReader.readLine();
-						System.out.println("Vom Server empfangen: " + line);
-					} catch (IOException e) {
-						e.printStackTrace();
-					}
-					client.processReceived(line);
-				}
-			}
-		};
-		client.serverThread.start();
+		client.startServerThread();
 
 		gui.setVisible(true);
 	}
