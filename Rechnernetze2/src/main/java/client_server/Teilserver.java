@@ -11,6 +11,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+
+
 public class Teilserver {
 
     private Map<String,String> nutzer;
@@ -18,7 +20,8 @@ public class Teilserver {
     private BufferedReader reader;
     private BufferedWriter writer;
     private Socket socket;
-    private Nutzerverwaltung nutzerverw;
+	private Nutzerverwaltung nutzerverw;
+	private String user;
 
     public Teilserver(Socket socket) {
 
@@ -29,7 +32,15 @@ public class Teilserver {
             this.socket = socket;
         } catch (IOException e) {
             e.printStackTrace();
-        }
+		}
+		
+		nutzerverw.getMap().setListener(new ObservableMap.ChangeListener(){
+		
+			@Override
+			public void onChange() {
+				handleActiveUserReq(user);
+			}
+		});
     }
 
     
@@ -48,10 +59,12 @@ public class Teilserver {
 
 				switch(eingabe[0]) {
 				case "0":
+					this.user = eingabe[1];
 					handleRegistrieren(eingabe, socket);
 					break;
 				case "1":
 					System.out.println(socket);
+					this.user = eingabe[1];
 					handleAnmelden(eingabe, socket);
 					break;
 				case "2":
@@ -60,15 +73,13 @@ public class Teilserver {
 				case "3":
 					handleAbmelden(eingabe);
 					break;
-				case "7":
-					handleActiveUserReq(eingabe);
-					break;
 				default:
 					System.out.println("default " + line);
 					writer.write("default \n");
+					writer.flush();
 					break;
 				}
-				writer.flush();
+				
 			}
 			catch (IOException e)
 			{
@@ -79,16 +90,18 @@ public class Teilserver {
     }
     
     
-    private void handleActiveUserReq(String [] eingabe) {
+    private void handleActiveUserReq(String eingabe) {
 		List <String> tempSet = getAktiveNutzer();
 		try {
+			writer.write("7 ");
 			for (String element : tempSet) {
-				if (!element.equalsIgnoreCase(eingabe[1].trim())){
-					writer.write("7 " + element + " ");
+				if (!element.equalsIgnoreCase(eingabe)){
+					writer.write(element + " ");
 					System.out.println(element);
 				}
 			} 
 			writer.write("\n");
+			writer.flush();
 		}
 		catch(IOException e){
 			e.printStackTrace();
@@ -113,6 +126,7 @@ public class Teilserver {
 		} else {
 			try {
 				writer.write("Nutzername bereits vergeben \n");
+				writer.flush();
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
@@ -125,40 +139,38 @@ public class Teilserver {
 		String reverse = line[2];
 		final StringBuffer passwort = new StringBuffer(reverse).reverse();
 		
+		try{
 		if(nutzerverw.compareUser(benutzername)) {
 			if(nutzerverw.comparePass(benutzername, passwort.toString())) {
 				if(!nutzerverw.isUserActive(benutzername)) {
 					System.out.println("Eingeloggt");
-					try {
-						nutzerverw.addActiveUser(benutzername, socket);
-						writer.write("1 200 \n");
-					} catch (IOException e) {
-						e.printStackTrace();
-					}
+					
+					nutzerverw.addActiveUser(benutzername, socket);
+					writer.write("1 200 \n");
+					
 				} else {
 					System.out.println("Schon eingeloggt ");
-					try {
-						writer.write("Schon eingeloggt \n");
-					} catch (IOException e) {
-						e.printStackTrace();
-					}
+					
+					writer.write("Schon eingeloggt \n");
+					
 				}
 			} else {
 				System.out.println("Passwort falsch ");
-				try {
-					writer.write("Passwort falsch \n");
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
+				
+				writer.write("Passwort falsch \n");
+				
 			}
 		} else {
 			System.out.println("Nutzer nicht vorhanden");
-			try {
-				writer.write("Nutzer nicht vorhanden \n");
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		}		
+			
+			writer.write("Nutzer nicht vorhanden \n");
+			
+		}
+		writer.flush();
+		} catch (IOException e){
+			e.printStackTrace();
+		}
+		
     }
     
     
@@ -184,6 +196,7 @@ public class Teilserver {
 			} else {
 				writer.write("Der User möchte gerade nicht mit dir chatten. \n");
 			}
+			writer.flush();
 		} catch (IOException e1) {
 			e1.printStackTrace();
 		}
@@ -195,6 +208,7 @@ public class Teilserver {
 		nutzerverw.removeActiveUser(benutzername);
 		try {
 			writer.write("3 200" + "\n");
+			writer.flush();
 			socket.close();
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -209,6 +223,8 @@ public class Teilserver {
     public List<String> getAktiveNutzer() {
 		return nutzerverw.getActiveUserlist();
 	}
+
+	
 
 
 }

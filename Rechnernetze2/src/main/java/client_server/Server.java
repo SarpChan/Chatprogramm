@@ -61,6 +61,10 @@ public class Server
 		}
 	}
 
+	public void updateClients(ArrayList list){
+		
+	}
+
 
 	public static void main(String[] args){
 		new Server();

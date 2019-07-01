@@ -48,18 +48,19 @@ import java.util.Observable;
 public class UI extends JFrame {
 
 	static GraphicsConfiguration gc;
-	private JPanel chatEingabePanel, registrierPanel, user, pass, buttons, nutzerListPanel, chatFensterPanel;
+	private JPanel chatEingabePanel, registrierPanel, user, pass, buttons, nutzerListPanel, chatFensterPanel, topPanel;
 	private JTextArea textArea;
 	private JScrollPane areaScrollPane, nutzerAnzeige, chatFenster;
 	private JTextField username;
 	private JPasswordField password;
-	private JButton absenden, registrieren, anmelden, abmelden;
+	private JButton absenden, registrieren, anmelden, abmelden, back;
 	private Client client;
 	private CustomJList<String> nutzerliste, nachrichten;
 	private DefaultListModel<String> nutzerModel, chatModel;
 	private Dimension centerDim;
 	private final JOptionPane optionPane;
 	private final JDialog dialog;
+	private Views lastView, currentView;
 
 
 	public UI(Client cl) {
@@ -69,7 +70,8 @@ public class UI extends JFrame {
 		setLayout(new BorderLayout());
 
 		this.centerDim = new Dimension(400, 450);
-
+		this.currentView = Views.LOGIN;
+		this.lastView = null;
 		this.chatEingabePanel = new JPanel(new FlowLayout());
 		this.textArea = new JTextArea(4, 20);
 		this.areaScrollPane = new JScrollPane(this.textArea);
@@ -143,12 +145,14 @@ public class UI extends JFrame {
 		this.user = new JPanel();
 		this.pass = new JPanel();
 		this.buttons = new JPanel();
+		this.topPanel = new JPanel();
 		this.username = new JTextField();
 		this.password = new JPasswordField();
 		this.absenden = new JButton("absenden");
 		this.registrieren = new JButton("registrieren");
 		this.anmelden = new JButton("anmelden");
 		this.abmelden = new JButton("abmelden");
+		this.back = new JButton("back");
 
 		this.setTitle("Chatsystem");	
 		this.setVisible(true);
@@ -188,6 +192,16 @@ public class UI extends JFrame {
 		this.anmelden.setEnabled(false);
 		this.registrieren.setEnabled(false);
 
+		this.topPanel.setLayout(new BoxLayout(this.topPanel, BoxLayout.X_AXIS));
+		this.topPanel.add(this.back);
+		this.topPanel.add(Box.createHorizontalGlue());
+		this.topPanel.add(this.abmelden);
+		this.back.setAlignmentX(Component.LEFT_ALIGNMENT);
+		this.abmelden.setAlignmentX(Component.RIGHT_ALIGNMENT);
+		
+		
+		
+
 		this.registrierPanel.add(Box.createVerticalGlue());
 		this.registrierPanel.add(this.user);
 		this.registrierPanel.add(this.pass);
@@ -200,13 +214,15 @@ public class UI extends JFrame {
 				JOptionPane.QUESTION_MESSAGE,
 				JOptionPane.YES_NO_OPTION);
 
+		
 		this.dialog = new JDialog(this, 
 				"Click a button",
 				true);
 		this.dialog.setContentPane(optionPane);
+		
 
 
-		//center.add(this.abmelden);
+		
 
 
 		this.username.getDocument().addDocumentListener(new DocumentListener() {
@@ -297,6 +313,26 @@ public class UI extends JFrame {
 			}
 		});
 
+		optionPane.addPropertyChangeListener(
+    new PropertyChangeListener() {
+        public void propertyChange(PropertyChangeEvent e) {
+            String prop = e.getPropertyName();
+
+            if (dialog.isVisible() 
+             && (e.getSource() == optionPane)
+             && (prop.equals(JOptionPane.VALUE_PROPERTY))) {
+				
+				if((int)optionPane.getValue() == 0){
+					//TODO Hier einfügen, wie positiv auf Chatanfrage geantwortet wird.
+				} else {
+					// TODO negativ
+				}
+                dialog.setVisible(false);
+            }
+        }
+    });
+dialog.pack();
+
 		this.anmelden.addActionListener(new ActionListener() {
 
 			@Override
@@ -306,7 +342,7 @@ public class UI extends JFrame {
 
 				if(client.isLoggedIn()) {
 					switchView(Views.HOME);
-					//updateNutzerListe();
+					
 				}
 				return;
 			}
@@ -316,7 +352,7 @@ public class UI extends JFrame {
 
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				updateNutzerListe();
+				
 				return;
 			}
 		});
@@ -336,29 +372,46 @@ public class UI extends JFrame {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				client.login(username.getText(), password.getText(), "0");
-				try {
-					// Eingefügt, da die Kommuniation zwischen Server und Client zu lange dauert und client.loggedIn in der nächsten Abfrage sonst immer false ergibt
-					Thread.sleep(50); 
-				} catch (InterruptedException e1) {
-					e1.printStackTrace();
-				}
-//				TODO listener auf loggedIn
-				if(client.isLoggedIn()) {
-					switchView(Views.HOME);
-				}
+				
+				
 				return;
 			}
 		});
+		this.back.addActionListener(new ActionListener(){
+			
+			@Override
+			public void actionPerformed(ActionEvent e){
+				
+				if(lastView != Views.LOGIN){
+					switchView(lastView);
+				}
 
-        this.client.chatanfrage.setListener(new BooVariable.ChangeListener(){
+			}
+		});
+
+		this.client.getLoggedIn().setListener(new BooVariable.ChangeListener(){
+		
+			@Override
+			public void onChange() {
+				if(client.isLoggedIn()){
+					switchView(Views.HOME);
+				}
+			}
+		});
+
+
+        this.client.getChatanfrage().setListener(new BooVariable.ChangeListener(){
         
             @Override
             public void onChange() {
-                if(client.chatanfrage.isBoo()){
+                if(client.hasChatanfrage()){
                     SwingUtilities.invokeLater(new Runnable()
                     {
                         public void run(){
-                            dialog.setVisible(true);
+							dialog.setBounds(getLocationOnScreen().x  ,getLocationOnScreen().y + 200, 400, 150);
+							dialog.setVisible(true);
+							
+							
                         }
                     });
                 }
@@ -386,6 +439,21 @@ public class UI extends JFrame {
 				//frame.add(southPanel, BorderLayout.SOUTH);
 
 				this.add(this.registrierPanel, BorderLayout.CENTER);
+
+
+				this.client.getActiveUsers().setListener(new ObservableListe.ChangeListener(){
+		
+					@Override
+					public void onChange() {
+
+						nutzerModel.clear();
+						for (String ele : client.getActiveUsers().getListe()) {
+							nutzerModel.addElement(ele);
+						}
+						
+					}
+				});
+		
 	}
 
 
@@ -397,6 +465,8 @@ public class UI extends JFrame {
 		{
 			public void run(){
 				if (whereTo == Views.LOGIN) {
+					lastView = Views.LOGIN;
+					currentView = Views.LOGIN;
 					getContentPane().removeAll();
 
 					repaint();
@@ -406,14 +476,18 @@ public class UI extends JFrame {
 					repaint();
 					validate();
 				} else if (whereTo == Views.HOME) {
+					lastView = currentView;
+					currentView = Views.HOME;
+					
 					getContentPane().removeAll();
 					repaint();
 					validate();
 
 					add(nutzerListPanel, BorderLayout.CENTER);
+					add(topPanel, BorderLayout.NORTH);
+					//client.requestActiveUser();
 
-					absenden.setEnabled(true);
-					add(absenden, BorderLayout.SOUTH);
+					
 
 					validate();                        
 
@@ -423,6 +497,9 @@ public class UI extends JFrame {
 					//TODO targetClient an Client senden, Socket zwischen target und self erstellen
 					//TODO Nachrichten laden, speichern, etc.
 
+					lastView = currentView;
+					currentView = Views.CHAT;
+
 					getContentPane().removeAll();
 					repaint();
 					validate();
@@ -430,8 +507,11 @@ public class UI extends JFrame {
 					add(chatFensterPanel, BorderLayout.CENTER);
 
 					textArea.setEditable(true);
-
+					absenden.setEnabled(true);
+					
+					add(topPanel, BorderLayout.NORTH);
 					add(chatEingabePanel, BorderLayout.SOUTH);
+					
 
 					validate();                        
 
@@ -442,27 +522,7 @@ public class UI extends JFrame {
 	}
 
 
-	public void updateNutzerListe(){
-		client.requestActiveUser();
-		try {
-			// Eingefügt, da die Kommuniation zwischen Server und Client zu lange dauert und clients sonst nicht aktualisiert werden
-			Thread.sleep(60); 
-		} catch (InterruptedException e1) {
-			e1.printStackTrace();
-		}
-//		TODO listener fuer ActiveUsers
-		String text = client.getActiveUsers();
-		if (text != null)
-		{
-			String [] liste = text.split(" ");
-
-			nutzerModel.clear();
-
-			for (String ele : liste) {
-				nutzerModel.addElement(ele);
-			}
-		}
-	}
+	
 
 
 	public void exitProcedure(){

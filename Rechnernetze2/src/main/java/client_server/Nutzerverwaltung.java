@@ -9,19 +9,23 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import client_server.ObservableMap.ChangeListener;
+
+
+
 
 // TODO Singleton machen
 
 
 public class Nutzerverwaltung {
     
-    private Map<String, Socket> aktiveNutzer;
+    private ObservableMap aktiveNutzer;
     private Map<String, String> nutzer;
     private static Nutzerverwaltung nutzerverw = new Nutzerverwaltung();
     
     private Nutzerverwaltung(){
 
-        this.aktiveNutzer = new HashMap<String, Socket>();
+        this.aktiveNutzer = new ObservableMap();
         this.nutzer = new HashMap<String,String>();
 
     }
@@ -31,12 +35,14 @@ public class Nutzerverwaltung {
     }
 
     public void addActiveUser(String key, Socket socket){
-        aktiveNutzer.put(key,socket);
+        aktiveNutzer.addUser(key,socket);
+        //TODO Sag Teilserver er soll senden
     
     }
 
     public void addUser(String user, String pass){
         nutzer.put(user, pass);
+        
     }
 
     /**
@@ -47,12 +53,12 @@ public class Nutzerverwaltung {
      */
     public Socket getActiveUserSocket(String key){
         
-        return aktiveNutzer.get(key);
+        return aktiveNutzer.getSingleUser(key);
 
     }
 
     public void removeActiveUser(String key){
-        aktiveNutzer.remove(key);
+        aktiveNutzer.deleteUser(key);
     }
 
     public void removeUser(String user, String pass){
@@ -79,7 +85,7 @@ public class Nutzerverwaltung {
      */
     public synchronized List<String> getActiveUserlist(String zugreifenderNutzer){
 
-        List<String> list = Arrays.asList(aktiveNutzer.keySet().toArray(new String[0]));
+        List<String> list = Arrays.asList(aktiveNutzer.getKeySet().toArray(new String[0]));
         list.remove(zugreifenderNutzer);
         Collections.sort(list);
 
@@ -92,7 +98,7 @@ public class Nutzerverwaltung {
      */
     public synchronized List<String> getActiveUserlist(){
 
-        List<String> list = Arrays.asList(aktiveNutzer.keySet().toArray(new String[0]));
+        List<String> list = Arrays.asList(aktiveNutzer.getKeySet().toArray(new String[0]));
         Collections.sort(list);
 
         return list;
@@ -109,11 +115,15 @@ public class Nutzerverwaltung {
     
     public boolean isUserActive(String user){
         try{
-            return aktiveNutzer.containsKey(user);
+            return aktiveNutzer.inMap(user);
         } catch(NullPointerException e){
             return false;
         }
         
+    }
+
+    public ObservableMap getMap(){
+        return aktiveNutzer.getSelf();
     }
 
     

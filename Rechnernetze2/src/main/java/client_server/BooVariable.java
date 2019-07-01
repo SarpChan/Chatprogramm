@@ -5,8 +5,12 @@ public class BooVariable {
     private boolean boo = false;
     private ChangeListener listener;
 
+    public BooVariable(boolean boo){
+        this.boo = boo;
+    }
+
     public boolean isBoo() {
-        return boo;
+        return this.boo;
     }
 
     public void setBoo(boolean boo) {
