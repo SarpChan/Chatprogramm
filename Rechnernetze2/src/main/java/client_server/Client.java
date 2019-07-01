@@ -75,7 +75,6 @@ public class Client {
 
 	private synchronized void processReceived(String line) {
 		if (line.startsWith("5 ")) {
-			System.out.println("chat");
 			answerUdpConnection();
 		} else if (line.startsWith("0 ") || line.startsWith("1 ")) {
 			if (line.trim().endsWith("200")) {
@@ -85,12 +84,7 @@ public class Client {
 		} else if (line.startsWith("2 ")) {
 			buildUdpConnection(line);
 		} else if (line.equals("3 200")) {
-			try {
-				socket.close();
 
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
 			loggedIn.setBoo(false);
 
 		} else if (line.startsWith("7 ")) {
@@ -98,11 +92,46 @@ public class Client {
 			String temp = line.substring(2);
 
 			activeUsers.setListe(temp.split(" "));
+		} else if (line.startsWith("6 ")) {
+			loggedIn.setBoo(false);
+			try {
+				socket.close();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		}
 	}
 
-	public void sendText(final String text) {
-		try {
+
+	public void startServerThread() {
+		serverThread = new Thread() {
+			BufferedReader serverReader;
+
+			@Override
+			public void run()
+			{
+				while(true) {
+					String line = "";
+					try {
+						serverReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+						line = serverReader.readLine();
+						System.out.println("Vom Server empfangen: " + line);
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+					processReceived(line);
+				}
+			}
+		};
+		serverThread.start();
+	}
+	
+	
+	public void sendText(final String text)
+	{
+		try
+		{
 			System.out.println("Sende an Server: " + text);
 			writer.write(text + " \n");
 			writer.flush();
@@ -130,13 +159,13 @@ public class Client {
 	// durch Server uebermittelte Chatanfrage beantworten
 	public void answerUdpConnection() {
 		setChat(true);
-		System.out.println("wahr");
 	}
 
 	public void buildUdpConnection(String line) {
-		int chatPort = -1;
-		String chatHost = "";
-
+		String [] data = line.split(" ");
+		int chatPort = Integer.parseInt(data[1]);
+		String chatHost = data[2];
+		
 		receivingThread = new Thread() {
 			byte[] receiveData = new byte[1024];
 			DatagramSocket clientSocket = null;
@@ -148,14 +177,16 @@ public class Client {
 				} catch (SocketException e1) {
 					e1.printStackTrace();
 				}
-				DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
-				try {
-					clientSocket.receive(receivePacket);
-				} catch (IOException e) {
-					e.printStackTrace();
+				while(true) {
+					DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);        
+					try {
+						clientSocket.receive(receivePacket);
+					} catch (IOException e) {
+						e.printStackTrace();
+					}        
+					String modifiedSentence = new String(receivePacket.getData());        
+					System.out.println("FROM CHATPARTNER:" + modifiedSentence); 
 				}
-				String modifiedSentence = new String(receivePacket.getData());
-				System.out.println("FROM SERVER:" + modifiedSentence);
 			}
 		};
 		receivingThread.start();
@@ -177,13 +208,16 @@ public class Client {
 				}
 				BufferedReader inFromUser = new BufferedReader(new InputStreamReader(System.in));
 				String sentence = "";
-				try {
-					sentence = inFromUser.readLine();
-					sendData = sentence.getBytes();
-					DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, IPAddress, chatPort);
-					clientSocket.send(sendPacket);
-				} catch (IOException e) {
-					e.printStackTrace();
+				while(true) {
+					try {
+						sentence = inFromUser.readLine();
+						sendData = sentence.getBytes();
+						DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, IPAddress, chatPort);
+						System.out.println("SENDING" + sentence);
+						clientSocket.send(sendPacket);
+					} catch (IOException e) {
+						e.printStackTrace();
+					}        
 				}
 			}
 		};
@@ -216,32 +250,15 @@ public class Client {
 		benutzername = username;
 	}
 
+	public void schliessen(){
+		sendText("6 ");
+	}
+
 	public static void main(String[] args) throws IOException {
 		final Client client = new Client();
 		UI gui = new UI(client);
 
-		client.serverThread = new Thread() {
-			BufferedReader serverReader;
-
-			@Override
-			public void run() {
-				while (client.socket.isConnected()) {
-					String line = "";
-					try {
-						serverReader = new BufferedReader(new InputStreamReader(client.socket.getInputStream()));
-						line = serverReader.readLine();
-						System.out.println("Vom Server empfangen: " + line);
-						client.processReceived(line);
-					} catch (IOException e) {
-						e.printStackTrace();
-					} catch (NullPointerException e) {
-
-					}
-
-				}
-			}
-		};
-		client.serverThread.start();
+		client.startServerThread();
 
 		gui.setVisible(true);
 	}
@@ -331,4 +348,6 @@ public class Client {
 		return this.nachrichten.get(key).getListe() == null? null: this.nachrichten.get(key).getListe();
 
 	}
+
+	
 }

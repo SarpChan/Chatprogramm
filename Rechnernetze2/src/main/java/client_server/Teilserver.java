@@ -73,6 +73,9 @@ public class Teilserver {
 				case "3":
 					handleAbmelden(eingabe);
 					break;
+				case "6":
+					handleSchliessen(eingabe);
+					break;
 				default:
 					System.out.println("default " + line);
 					writer.write("default \n");
@@ -209,11 +212,25 @@ public class Teilserver {
 		try {
 			writer.write("3 200" + "\n");
 			writer.flush();
-			socket.close();
+
+			
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-    }
+	}
+	
+	public void handleSchliessen(String [] line){
+		String benutzername = line[1];
+		nutzerverw.removeActiveUser(benutzername);
+		try {
+			writer.write("6 200" + "\n");
+			writer.flush();
+			socket.close();
+			
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
     
 	
     public Map<String, String> getNutzer() {
