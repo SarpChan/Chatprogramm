@@ -29,7 +29,8 @@ public class Teilserver {
         try {
             this.reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             this.writer = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
-            this.socket = socket;
+			this.socket = socket;
+			
         } catch (IOException e) {
             e.printStackTrace();
 		}
@@ -187,19 +188,10 @@ public class Teilserver {
 			BufferedReader chatPartnerReader = new BufferedReader(new InputStreamReader(chatPartnerSocket.getInputStream()));
 			BufferedWriter chatPartnerWriter = new BufferedWriter(new OutputStreamWriter(chatPartnerSocket.getOutputStream()));
 			
-			chatPartnerWriter.write("5 Neue Chatanfrage \n");
+			chatPartnerWriter.write("5 " + user + " \n");
 			chatPartnerWriter.flush();
 			System.out.println("Chatanfrage gesendet");
-			answer = chatPartnerReader.readLine();
-			
-			if(answer.equals("yes")) {
-				writer.write("2 " + String.valueOf(port) + " " + ip.getHostName() + "\n");
-				chatPartnerWriter.write(String.valueOf(socket.getPort()) + " " + socket.getInetAddress().getHostName() + "\n");
-				chatPartnerWriter.flush();
-			} else {
-				writer.write("Der User möchte gerade nicht mit dir chatten. \n");
-			}
-			writer.flush();
+
 		} catch (IOException e1) {
 			e1.printStackTrace();
 		}

@@ -35,6 +35,7 @@ public class Client {
 	private BooVariable loggedIn = new BooVariable(false);
 	private BooVariable chatanfrage = new BooVariable(false);
 	private Map<String, MessageListe> nachrichten = new HashMap<>();
+	
 
 	public class ServerThread extends Thread {
 		BufferedReader serverReader;
@@ -75,7 +76,8 @@ public class Client {
 
 	private synchronized void processReceived(String line) {
 		if (line.startsWith("5 ")) {
-			answerUdpConnection();
+			this.chatanfrage.setVon(line.split(" ")[1]);
+			setChat(true);
 		} else if (line.startsWith("0 ") || line.startsWith("1 ")) {
 			if (line.trim().endsWith("200")) {
 				loggedIn.setBoo(true);
@@ -157,8 +159,13 @@ public class Client {
 	}
 
 	// durch Server uebermittelte Chatanfrage beantworten
-	public void answerUdpConnection() {
-		setChat(true);
+	public void answerUdpConnection(boolean bool) {
+		if(bool){
+		sendText("8 " + chatanfrage.getVon());
+		} else{
+			sendText("9 " + chatanfrage.getVon());
+		}
+		
 	}
 
 	public void buildUdpConnection(String line) {

@@ -13,7 +13,7 @@ public class CustomJList<E> extends JList<E> {
 
     @Override
     public int locationToIndex(Point location){
-
+        //TODO Message Klasse einbinden
         int index= super.locationToIndex(location);
         if (index != -1 && !getCellBounds(index, index).contains(location)){
             return -1;

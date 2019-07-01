@@ -58,17 +58,19 @@ public class UI extends JFrame {
 	private CustomJList<String> nutzerliste, nachrichten;
 	private DefaultListModel<String> nutzerModel, chatModel;
 	private Dimension centerDim;
-	private final JOptionPane optionPane;
-	private final JDialog dialog;
+	private JOptionPane optionPane;
+	private ArrayList<JDialog> dialog = new ArrayList();
 	private Views lastView, currentView;
+	private String anfragender;
+	private UI alles;
 
 
 	public UI(Client cl) {
 		super(gc);
 		this.client = cl;
-
+		
 		setLayout(new BorderLayout());
-
+		this.anfragender = "";
 		this.centerDim = new Dimension(400, 450);
 		this.currentView = Views.LOGIN;
 		this.lastView = null;
@@ -209,19 +211,11 @@ public class UI extends JFrame {
 		this.registrierPanel.add(Box.createVerticalGlue());
 
 
-		this.optionPane = new JOptionPane(
-				"Sie haben eine neue Chatanfrage",
-				JOptionPane.QUESTION_MESSAGE,
-				JOptionPane.YES_NO_OPTION);
-
 		
-		this.dialog = new JDialog(this, 
-				"Click a button",
-				true);
-		this.dialog.setContentPane(optionPane);
+		
 		
 
-
+		this.alles = alles;
 		
 
 
@@ -313,25 +307,7 @@ public class UI extends JFrame {
 			}
 		});
 
-		optionPane.addPropertyChangeListener(
-    new PropertyChangeListener() {
-        public void propertyChange(PropertyChangeEvent e) {
-            String prop = e.getPropertyName();
-
-            if (dialog.isVisible() 
-             && (e.getSource() == optionPane)
-             && (prop.equals(JOptionPane.VALUE_PROPERTY))) {
-				
-				if((int)optionPane.getValue() == 0){
-					//TODO Hier einfügen, wie positiv auf Chatanfrage geantwortet wird.
-				} else {
-					// TODO negativ
-				}
-                dialog.setVisible(false);
-            }
-        }
-    });
-dialog.pack();
+		
 
 		this.anmelden.addActionListener(new ActionListener() {
 
@@ -401,15 +377,37 @@ dialog.pack();
 
 
         this.client.getChatanfrage().setListener(new BooVariable.ChangeListener(){
+
+			
         
             @Override
-            public void onChange() {
+            public synchronized void onChange() {
                 if(client.hasChatanfrage()){
                     SwingUtilities.invokeLater(new Runnable()
                     {
                         public void run(){
-							dialog.setBounds(getLocationOnScreen().x  ,getLocationOnScreen().y + 200, 400, 150);
-							dialog.setVisible(true);
+							
+							
+							
+							JOptionPane optionPane = new JOptionPane();
+							
+							dialog.add( new JDialog(alles, 
+							"Click a button",
+							true));
+							int temp = dialog.size()-1;
+							
+
+							optionPane.setBounds(getLocationOnScreen().x, getLocationOnScreen().y + 200, 400, 150);
+							
+							int auswahl = optionPane.showOptionDialog(alles, "Sie haben eine neue Chatanfrage von " + client.getChatanfrage().getVon(), 
+							"Chatanfrage",optionPane.YES_NO_OPTION , optionPane.QUESTION_MESSAGE, null, null, 1);
+							if (auswahl == 0){
+								client.answerUdpConnection(true);
+							} else {
+								client.answerUdpConnection(false);
+							}
+
+							
 							
 							
                         }
