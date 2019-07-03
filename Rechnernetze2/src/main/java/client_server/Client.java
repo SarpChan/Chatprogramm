@@ -353,9 +353,7 @@ public class Client {
 
 
 	public List<Message> openChat(String key){
-
 		return this.nachrichten.get(key).getListe() == null? null: this.nachrichten.get(key).getListe();
-
 	}
 
 
