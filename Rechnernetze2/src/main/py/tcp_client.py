@@ -1,5 +1,5 @@
 __author__ = 'schaible'
-
+from PyQt5.QtCore import QObject, pyqtSignal
 
 """  TCPClient.py
 Use the better name for this module:   MakeUpperCaseClientUsingTCP
@@ -56,7 +56,8 @@ print ("Received from Make Upper Case Server: ", modifiedSentence)
 
 # close the TCP connection
 clientSocket.close()'''
-
+class UpdatedListeEvent(QObject):
+    updatedEvent = pyqtSignal()
 
 
 serverName = "localhost"
@@ -64,6 +65,8 @@ serverPort = 27999
 
 class ClientPy:
     def __init__(self):
+
+        self.nutzerliste = []
        
         self.clientSocket = socket(AF_INET, SOCK_STREAM)
         self.clientSocket.connect((serverName,serverPort))
@@ -113,7 +116,7 @@ class ClientPy:
 
     def requestUdpConnection(self, name):
         antwort = self.sendText("2 " + name)
-        print("tetst ", anwort)
+        print("tetst ", antwort)
         
         
 def main():   
