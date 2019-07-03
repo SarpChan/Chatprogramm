@@ -6,6 +6,7 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.net.SocketException;
+import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -19,9 +20,6 @@ import com.google.gson.JsonIOException;
 import com.google.gson.JsonSyntaxException;
 import com.google.gson.reflect.TypeToken;
 
-// In der line steht 0: fuer registrieren
-// 1: Anmelden
-// 2: Chatten
 
 public class Client {
 
@@ -35,7 +33,7 @@ public class Client {
 	private BooVariable loggedIn = new BooVariable(false);
 	private BooVariable chatanfrage = new BooVariable(false);
 	private Map<String, MessageListe> nachrichten = new HashMap<>();
-	
+
 
 	public class ServerThread extends Thread {
 		BufferedReader serverReader;
@@ -79,27 +77,22 @@ public class Client {
 			this.chatanfrage.setVon(line.split(" ")[1]);
 			setChat(true);
 		} else if (line.startsWith("0 ") || line.startsWith("1 ")) {
-			if (line.trim().endsWith("200")) {
+			if (line.trim().endsWith("200"))
 				loggedIn.setBoo(true);
-			} else
+			else
 				loggedIn.setBoo(false);
 		} else if (line.startsWith("2 ")) {
 			buildUdpConnection(line);
 		} else if (line.equals("3 200")) {
-
 			loggedIn.setBoo(false);
-
 		} else if (line.startsWith("7 ")) {
-			System.out.println(line);
 			String temp = line.substring(2);
-
 			activeUsers.setListe(temp.split(" "));
 		} else if (line.startsWith("6 ")) {
 			loggedIn.setBoo(false);
 			try {
 				socket.close();
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		}
@@ -128,8 +121,8 @@ public class Client {
 		};
 		serverThread.start();
 	}
-	
-	
+
+
 	public void sendText(final String text)
 	{
 		try
@@ -144,6 +137,7 @@ public class Client {
 		}
 	}
 
+
 	public void close() {
 		try {
 			System.out.println("Sende an Server: " + "3 " + benutzername);
@@ -153,38 +147,48 @@ public class Client {
 		}
 	}
 
+
 	// bei Server UDP-Connection mit user "name" anfragen
 	public void requestUdpConnection(String name) {
 		sendText("2 " + name);
 	}
 
+
 	// durch Server uebermittelte Chatanfrage beantworten
 	public void answerUdpConnection(boolean bool) {
 		if(bool){
-		sendText("8 " + chatanfrage.getVon());
+			sendText("8 " + chatanfrage.getVon());
 		} else{
 			sendText("9 " + chatanfrage.getVon());
 		}
-		
 	}
+
 
 	public void buildUdpConnection(String line) {
 		String [] data = line.split(" ");
 		int chatPort = Integer.parseInt(data[1]);
+		int meinPort = Integer.parseInt(data[3]);
 		String chatHost = data[2];
-		
+
 		receivingThread = new Thread() {
 			byte[] receiveData = new byte[1024];
 			DatagramSocket clientSocket = null;
+			DatagramSocket recSocket = null;
+			InetAddress IPAddress = null;
 
 			@Override
 			public void run() {
 				try {
-					clientSocket = new DatagramSocket();
+					clientSocket = new DatagramSocket(meinPort);
+					recSocket = new DatagramSocket();
+					IPAddress = InetAddress.getByName(chatHost);
 				} catch (SocketException e1) {
 					e1.printStackTrace();
+				} catch (UnknownHostException e) {
+					e.printStackTrace();
 				}
 				while(true) {
+					receiveData = new byte[1024];
 					DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);        
 					try {
 						clientSocket.receive(receivePacket);
@@ -192,7 +196,7 @@ public class Client {
 						e.printStackTrace();
 					}        
 					String modifiedSentence = new String(receivePacket.getData());        
-					System.out.println("FROM CHATPARTNER:" + modifiedSentence); 
+					System.out.println("FROM CHATPARTNER: " + modifiedSentence); 
 				}
 			}
 		};
@@ -201,13 +205,16 @@ public class Client {
 		sendingThread = new Thread() {
 			byte[] sendData = new byte[1024];
 			DatagramSocket clientSocket = null;
+			DatagramSocket recSocket = null;
 			InetAddress IPAddress = null;
 
 			@Override
 			public void run() {
 				try {
 					clientSocket = new DatagramSocket();
+					recSocket = new DatagramSocket();
 					IPAddress = InetAddress.getByName(chatHost);
+					recSocket.setSoTimeout(2000);
 				} catch (SocketException e) {
 					e.printStackTrace();
 				} catch (UnknownHostException e) {
@@ -220,33 +227,26 @@ public class Client {
 						sentence = inFromUser.readLine();
 						sendData = sentence.getBytes();
 						DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, IPAddress, chatPort);
-						System.out.println("SENDING" + sentence);
+						System.out.println("SENDING: " + sentence);
 						clientSocket.send(sendPacket);
 					} catch (IOException e) {
 						e.printStackTrace();
-					}        
+					}
 				}
 			}
 		};
 		sendingThread.start();
 	}
 
+
 	public void endUdpConnection(Socket clientSocket) {
-		try {
-			clientSocket.close();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+		sendingThread.interrupt();
+		receivingThread.interrupt();
 	}
- /*
-	public void requestActiveUser() {
-		String line = "7 " + benutzername;
-		sendText(line);
-	}
-*/
+
+
 	public void login(String username, String password, String option) {
 		String line;
-		System.out.println("Registrieren");
 
 		// "sichere" Übertragung des Passworts
 		final StringBuffer reverse = new StringBuffer(password).reverse();
@@ -257,9 +257,11 @@ public class Client {
 		benutzername = username;
 	}
 
+
 	public void schliessen(){
 		sendText("6 ");
 	}
+
 
 	public static void main(String[] args) throws IOException {
 		final Client client = new Client();
@@ -342,7 +344,7 @@ public class Client {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
 					}
-					
+
 				}
 			}
 		}
@@ -356,5 +358,5 @@ public class Client {
 
 	}
 
-	
+
 }

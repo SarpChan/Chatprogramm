@@ -9,43 +9,43 @@ import java.net.InetAddress;
 import java.net.Socket;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 
 
 public class Teilserver {
 
-    private Map<String,String> nutzer;
-	private Map <String, Socket> aktiveNutzer;
-    private BufferedReader reader;
-    private BufferedWriter writer;
-    private Socket socket;
+	private Map<String,String> nutzer;
+	private BufferedReader reader;
+	private BufferedWriter writer;
+	private Socket socket;
 	private Nutzerverwaltung nutzerverw;
+	private Anfrageverwaltung anfrageverw;
 	private String user;
 
-    public Teilserver(Socket socket) {
+	public Teilserver(Socket socket) {
 
-        nutzerverw = Nutzerverwaltung.getInstance();
-        try {
-            this.reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-            this.writer = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
-			this.socket = socket;
-			
-        } catch (IOException e) {
-            e.printStackTrace();
+		nutzerverw = Nutzerverwaltung.getInstance();
+		anfrageverw = Anfrageverwaltung.getInstance();
+
+		try {
+			this.reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+			this.writer = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
+			this.socket = socket;	
+		} catch (IOException e) {
+			e.printStackTrace();
 		}
-		
+
 		nutzerverw.getMap().setListener(new ObservableMap.ChangeListener(){
-		
+
 			@Override
 			public void onChange() {
 				handleActiveUserReq(user);
 			}
 		});
-    }
+	}
 
-    
-    public synchronized void handleRequests()
+
+	public synchronized void handleRequests()
 	{
 		while (!socket.isClosed())
 		{
@@ -55,7 +55,6 @@ public class Teilserver {
 				line = reader.readLine();
 				System.out.printf("Vom Client (%s) empfangen: %s%n", socket.getRemoteSocketAddress(), line);
 
-				// Registrieren
 				String eingabe[] = line.split(" ");
 
 				switch(eingabe[0]) {
@@ -64,12 +63,11 @@ public class Teilserver {
 					handleRegistrieren(eingabe, socket);
 					break;
 				case "1":
-					System.out.println(socket);
 					this.user = eingabe[1];
 					handleAnmelden(eingabe, socket);
 					break;
 				case "2":
-					handleChat(eingabe, socket);
+					handleChatanfrage(eingabe, socket);
 					break;
 				case "3":
 					handleAbmelden(eingabe);
@@ -77,13 +75,15 @@ public class Teilserver {
 				case "6":
 					handleSchliessen(eingabe);
 					break;
+				case "8":
+					handleChatResponse(eingabe, socket);
+					break;
 				default:
 					System.out.println("default " + line);
 					writer.write("default \n");
 					writer.flush();
 					break;
 				}
-				
 			}
 			catch (IOException e)
 			{
@@ -91,17 +91,16 @@ public class Teilserver {
 				return;
 			}
 		}
-    }
-    
-    
-    private void handleActiveUserReq(String eingabe) {
+	}
+
+
+	private void handleActiveUserReq(String eingabe) {
 		List <String> tempSet = getAktiveNutzer();
 		try {
 			writer.write("7 ");
 			for (String element : tempSet) {
 				if (!element.equalsIgnoreCase(eingabe)){
 					writer.write(element + " ");
-					System.out.println(element);
 				}
 			} 
 			writer.write("\n");
@@ -110,18 +109,18 @@ public class Teilserver {
 		catch(IOException e){
 			e.printStackTrace();
 		}
-    }
-    
-    
-    public void handleRegistrieren(String[] line, Socket socket) {
+	}
+
+
+	public void handleRegistrieren(String[] line, Socket socket) {
 		String benutzername = line[1];
 		String reverse = line[2];
 		final StringBuffer passwort = new StringBuffer(reverse).reverse();
 
 		if(!nutzerverw.compareUser(benutzername)) {
-            nutzerverw.addUser(benutzername, passwort.toString());
+			nutzerverw.addUser(benutzername, passwort.toString());
 			nutzerverw.addActiveUser(benutzername, socket);
-			
+
 			try {
 				writer.write("0 200 \n");
 			} catch (IOException e) {
@@ -135,105 +134,116 @@ public class Teilserver {
 				e.printStackTrace();
 			}
 		}
-    }
-    
-    
-    public void handleAnmelden(String []line, Socket socket) {
+	}
+
+
+	public void handleAnmelden(String []line, Socket socket) {
 		String benutzername = line[1];
 		String reverse = line[2];
 		final StringBuffer passwort = new StringBuffer(reverse).reverse();
-		
-		try{
-		if(nutzerverw.compareUser(benutzername)) {
-			if(nutzerverw.comparePass(benutzername, passwort.toString())) {
-				if(!nutzerverw.isUserActive(benutzername)) {
-					System.out.println("Eingeloggt");
-					
-					nutzerverw.addActiveUser(benutzername, socket);
-					writer.write("1 200 \n");
-					
+
+		try {
+			if(nutzerverw.compareUser(benutzername)) {
+				if(nutzerverw.comparePass(benutzername, passwort.toString())) {
+					if(!nutzerverw.isUserActive(benutzername)) {
+						System.out.println("Eingeloggt");
+						nutzerverw.addActiveUser(benutzername, socket);
+						writer.write("1 200 \n");
+					} else {
+						System.out.println("Schon eingeloggt ");
+						writer.write("Schon eingeloggt \n");	
+					}
 				} else {
-					System.out.println("Schon eingeloggt ");
-					
-					writer.write("Schon eingeloggt \n");
-					
+					System.out.println("Passwort falsch ");
+					writer.write("Passwort falsch \n");
 				}
 			} else {
-				System.out.println("Passwort falsch ");
-				
-				writer.write("Passwort falsch \n");
-				
+				System.out.println("Nutzer nicht vorhanden");
+				writer.write("Nutzer nicht vorhanden \n");
 			}
-		} else {
-			System.out.println("Nutzer nicht vorhanden");
-			
-			writer.write("Nutzer nicht vorhanden \n");
-			
-		}
-		writer.flush();
+			writer.flush();
 		} catch (IOException e){
 			e.printStackTrace();
 		}
-		
-    }
-    
-    
-    public void handleChat(String []line, Socket socket) {
+	}
+
+
+	public void handleChatanfrage(String []line, Socket socket) {
 		Socket chatPartnerSocket = nutzerverw.getActiveUserSocket(line[1]);
-		int port = chatPartnerSocket.getPort();
-		InetAddress ip = chatPartnerSocket.getInetAddress();
-		String answer = "";
-		
+
 		try {
-			BufferedReader chatPartnerReader = new BufferedReader(new InputStreamReader(chatPartnerSocket.getInputStream()));
 			BufferedWriter chatPartnerWriter = new BufferedWriter(new OutputStreamWriter(chatPartnerSocket.getOutputStream()));
-			
+
 			chatPartnerWriter.write("5 " + user + " \n");
 			chatPartnerWriter.flush();
 			System.out.println("Chatanfrage gesendet");
-
 		} catch (IOException e1) {
 			e1.printStackTrace();
 		}
+
+		anfrageverw.addChatanfrage(user, line[1]);
 	}
-	
-	
+
+
+	public void handleChatResponse(String [] line, Socket socket) {
+		if(line[0].contains("8")) {
+			if(anfrageverw.getChatanfrage(line[1]).equals(user)) {
+				Socket chatPartnerSocket = nutzerverw.getActiveUserSocket(line[1]);
+				int chatPort = chatPartnerSocket.getPort();
+				InetAddress chatIp = chatPartnerSocket.getInetAddress();
+
+				try {
+					BufferedWriter chatPartnerWriter = new BufferedWriter(new OutputStreamWriter(chatPartnerSocket.getOutputStream()));
+
+					chatPartnerWriter.write("2 " + socket.getPort() + " " + socket.getInetAddress().getHostAddress() + " " + chatPort + " \n");
+					chatPartnerWriter.flush();
+
+					writer.write("2 " + chatPort + " " + chatIp.getHostAddress() + " " + socket.getPort() + " \n");
+					writer.flush();
+				} catch (IOException e1) {
+					e1.printStackTrace();
+				}
+				anfrageverw.removeChatanfrage(line[1]);
+			}
+		}
+	}
+
+
 	public void handleAbmelden(String [] line) {
 		String benutzername = line[1];
 		nutzerverw.removeActiveUser(benutzername);
 		try {
 			writer.write("3 200" + "\n");
 			writer.flush();
-
-			
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 	}
-	
+
+
 	public void handleSchliessen(String [] line){
 		String benutzername = line[1];
 		nutzerverw.removeActiveUser(benutzername);
+
 		try {
 			writer.write("6 200" + "\n");
 			writer.flush();
-			socket.close();
-			
+			socket.close();	
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 	}
-    
-	
-    public Map<String, String> getNutzer() {
+
+
+	public Map<String, String> getNutzer() {
 		return nutzer;
-    }
-    
-    public List<String> getAktiveNutzer() {
+	}
+
+	public List<String> getAktiveNutzer() {
 		return nutzerverw.getActiveUserlist();
 	}
 
-	
+
 
 
 }
