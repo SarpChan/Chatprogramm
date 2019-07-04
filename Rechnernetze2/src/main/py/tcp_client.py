@@ -7,6 +7,7 @@ from socket import *
 import threading 
 
 
+
 #from thread import start_new_thread
 
 
@@ -103,7 +104,9 @@ class ClientPy:
         
     def processReceived(self):
         while True:
-            antwort = self.socket.recv(1024)
+            
+            print("bin hier")
+            antwort = self.socket.recv(1024).decode("utf-8")
             print("Vom Server empfangen", antwort)
             
             ''' Chatanfrage bekommen'''
@@ -133,12 +136,12 @@ class ClientPy:
                  self.loggedIn = False
                  self.socket.close()
                 
- 
-        
+    
 def main():   
     c = ClientPy()
     
-    thread1 = threading.Thread(target = c.processReceived)
+    t = threading.Thread(target = c.processReceived)
+    t.start()
     #Registrieren:
     c.login("o0o", "p", "0")
     
@@ -151,7 +154,7 @@ def main():
         #
         #sentence = input("Input lowercase sentence: ")
         #c.sendText(sentence)
-        
+      
     c.closeConnection()
         
 main()
