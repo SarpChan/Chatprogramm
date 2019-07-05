@@ -1,15 +1,8 @@
 package client_server;
 
 import java.io.*;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
-import java.net.InetAddress;
 import java.net.Socket;
 import java.net.SocketException;
-import java.net.SocketTimeoutException;
-import java.net.UnknownHostException;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -18,7 +11,6 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonIOException;
 import com.google.gson.JsonSyntaxException;
-import com.google.gson.reflect.TypeToken;
 
 
 public class Client {
@@ -173,7 +165,7 @@ public class Client {
 		int chatPort = Integer.parseInt(data[1]);
 		int meinPort = Integer.parseInt(data[3]);
 		String chatHost = data[2];
-
+		byte [] ok = hexStringToByteArray("0000004F004B0000");
 		String chatpartner = data[4];
 
 		loadChats();
@@ -183,17 +175,18 @@ public class Client {
 			setMsg(new MessageListe(benutzername, chatpartner));
 			nachrichten.put(benutzername + chatpartner, getMsg());
 		}	
+		this.chatPartner.setString(benutzername + chatpartner);
 
-		receivingThread = new ReceivingThread(this, meinPort, chatpartner); 
+		receivingThread = new ReceivingThread(this, meinPort, chatpartner, ok); 
 		receivingThread.start();
 
-		sendingThread = new SendingThread(this, chatHost, chatPort);
+		sendingThread = new SendingThread(this, chatHost, chatPort, ok);
 		sendingThread.start();
 	}
 
 
 	public void endUdpConnection(Socket clientSocket) {
-		sendingThread.interrupt();
+		getSendingThread().interrupt();
 		receivingThread.interrupt();
 		saveChats();
 	}
@@ -219,7 +212,7 @@ public class Client {
 
 	public byte[] hexStringToByteArray(String s) {
 		int len = s.length();
-		byte[] data = new byte[len / 2];
+		byte[] data = new byte[1024];
 		for (int i = 0; i < len; i += 2) {
 			data[i / 2] = (byte) ((Character.digit(s.charAt(i), 16) << 4)
 					+ Character.digit(s.charAt(i + 1), 16));
@@ -356,6 +349,14 @@ public class Client {
 
 	public void setBenutzername(String benutzername) {
 		this.benutzername = benutzername;
+	}
+
+	public SendingThread getSendingThread() {
+		return sendingThread;
+	}
+
+	public void setSendingThread(SendingThread sendingThread) {
+		this.sendingThread = sendingThread;
 	}
 
 

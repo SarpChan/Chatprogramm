@@ -350,6 +350,8 @@ public class UI extends JFrame {
 
 			@Override
 			public void actionPerformed(ActionEvent e) {
+				String text = textArea.getText();
+				client.getSendingThread().send(text);
 				
 				return;
 			}
