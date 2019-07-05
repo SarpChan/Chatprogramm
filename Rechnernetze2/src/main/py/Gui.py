@@ -7,7 +7,15 @@ from pydispatch import dispatcher
 from Chatprogramm.Rechnernetze2.src.main.py.tcp_client import ClientPy, registOKEvent
 #from Chatprogramm.Chatprogramm.Rechnernetze2.src.main.py.tcp_client import UpdatedListeEvent
 
+class Dialog(Widget):
+    def __init__(self):
+        super().__init__()
 
+        self.setStyleSheet("""QListWidget{
+                                    background: gray;
+                                }
+                                """
+                           )
 
 class Fenster(QWidget):
     def __init__(self):
@@ -36,6 +44,13 @@ class Fenster(QWidget):
         self.stacked = QStackedWidget()
         self.mainlayout = QVBoxLayout()
 
+        self.dialog = QWidget()
+        self.diaText = QLabel()
+        self.accept = QPushButton("acccept")
+        self.refuse = QPushButton("refuse")
+        self.accRef = QHBoxLayout()
+        self.diaBox = QVBoxLayout()
+
         self.user = QLabel("username")
         self.username = QLineEdit()
 
@@ -61,12 +76,30 @@ class Fenster(QWidget):
 
     def initMe(self):
 
+
+        ### DIALOG
+        self.accRef.addStretch()
+        self.accRef.addWidget(self.accept)
+        self.accRef.addWidget(self.refuse)
+        self.accRef.addStretch()
+
+        self.diaBox.addStretch()
+        self.diaBox.addWidget(self.diaText)
+        self.diaBox.addLayout(self.accRef)
+        self.diaBox.addStretch()
+
+        self.dialog.setLayout(self.diaBox)
+
+        self.setGeometry(0, 0, 400, 600)
+        self.setWindowTitle("Chatprogramm")
+        self.setFixedSize(400, 600)
+        self.show()
+
         #### LOGIN FENSTER
 
         #self.sig.updatedEvent.connect(self.updateListView)
 
         self.login.move(120, 400)
-        self.login.setToolTip('this is my Button')
         self.login.clicked.connect(self.einloggen)
         self.login.setDisabled(True)
         self.register.move(200, 400)
@@ -116,10 +149,11 @@ class Fenster(QWidget):
 
 
         print(self.stacked.currentWidget())
-        self.setGeometry(0, 0, 400, 600)
-        self.setWindowTitle("Chatprogramm")
-        self.setFixedSize(400, 600)
-        self.show()
+
+        self.dialog.setGeometry(100, 100, 400, 150)
+        self.dialog.setWindowTitle("Chatanfrage")
+        self.dialog.setFixedSize(400, 150)
+
 
 
         ### Uebergreifend
@@ -233,14 +267,9 @@ class Fenster(QWidget):
 
     def showChatAnfrage(self, anfrager):
 
+        self.diaText = "Neue Chatanfrage von" + anfrager
 
-
-        msg = QMessageBox()
-
-        msg.setText("Neue Chatanfrage von" + anfrager)
-        msg.setWindowTitle("Chatanfrage")
-        msg.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
-        msg.exec_()
+        self.dialog.show()
 
 
 

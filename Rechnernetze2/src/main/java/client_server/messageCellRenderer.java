@@ -40,10 +40,8 @@ public class messageCellRenderer  implements ListCellRenderer<Message> {
 
         poster.setText(message.getSender());
         text.setText(message.getMessage());
-        int width = list.getWidth();
-        // this is just to lure the ta's internal sizing mechanism into action
-        if (width > 0)
-            text.setSize(width, Short.MAX_VALUE);
+        
+        
         return cell;
 
     }
