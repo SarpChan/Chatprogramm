@@ -101,7 +101,9 @@ class ClientPy:
         clientSocket = socket(AF_INET, SOCK_DGRAM)
         chatEmpfangenThread = threading.Thread(target = self.chatEmpfangen)
         sendThread = threading.Thread(target = self.chatSenden, args=(chatHostAdresse, chatPort))
-    
+        chatEmpfangenThread.start()
+        sendThread.start()
+        
     def chatEmpfangen(self):
         while(True):
             modifiedMessage, serverAddress = socket.recvfrom(2048)
