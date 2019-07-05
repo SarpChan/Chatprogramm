@@ -26,16 +26,18 @@ public class Client {
 	private Socket socket;
 	private BufferedWriter writer;
 	private String benutzername = "";
-	private Thread receivingThread = null;
-	private Thread sendingThread = null;
+	private ReceivingThread receivingThread = null;
+	private SendingThread sendingThread = null;
 	private Thread serverThread = null;
 	private ObservableListe activeUsers = new ObservableListe();
 	private BooVariable loggedIn = new BooVariable(false);
 	private BooVariable chatanfrage = new BooVariable(false);
 	private Map<String, MessageListe> nachrichten = new HashMap<>();
 	private ObservableString chatPartner = new ObservableString();
-	private boolean received = true;
-
+	private boolean received = false;
+	private boolean sent = true;
+	private MessageListe msg;
+	
 
 	public class ServerThread extends Thread {
 		BufferedReader serverReader;
@@ -172,96 +174,20 @@ public class Client {
 		int meinPort = Integer.parseInt(data[3]);
 		String chatHost = data[2];
 
-		byte[] ok = hexStringToByteArray("0000004F004B0000");
-
 		String chatpartner = data[4];
-		MessageListe msg;
-		//saveChats();
+
 		loadChats();
-		
-		if(nachrichten.containsKey(benutzername + chatpartner)){
-			msg = nachrichten.get(benutzername + chatpartner);
-			this.chatPartner.setString(benutzername + chatpartner);
-		}else {
-			msg = new MessageListe(benutzername, chatpartner);
-			nachrichten.put(benutzername + chatpartner, msg);
-			this.chatPartner.setString(benutzername + chatpartner);
+		if(nachrichten.containsKey(benutzername + chatpartner))
+			setMsg(nachrichten.get(benutzername + chatpartner));
+		else {
+			setMsg(new MessageListe(benutzername, chatpartner));
+			nachrichten.put(benutzername + chatpartner, getMsg());
 		}	
 
-		receivingThread = new Thread() {
-			byte[] receiveData = new byte[1024];
-			DatagramSocket clientSocket = null;
-
-			@Override
-			public void run() {
-				try {
-					clientSocket = new DatagramSocket(meinPort);
-				} catch (SocketException e1) {
-					e1.printStackTrace();
-				}
-				while(true) {
-					receiveData = new byte[1024];
-					DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);        
-					try {
-						clientSocket.receive(receivePacket);
-					} catch (IOException e) {
-						e.printStackTrace();
-					}        
-					String modifiedSentence = new String(receivePacket.getData());        
-					System.out.println("FROM CHATPARTNER: " + modifiedSentence); 
-					if(receivePacket.getData() != ok)
-						msg.addMessage(chatpartner, modifiedSentence);
-					else
-						received = true;
-				}
-			}
-		};
+		receivingThread = new ReceivingThread(this, meinPort, chatpartner); 
 		receivingThread.start();
 
-		sendingThread = new Thread() {
-			byte[] sendData = new byte[1024];
-			DatagramSocket clientSocket = null;
-			InetAddress IPAddress = null;
-
-			@Override
-			public void run() {
-				try {
-					clientSocket = new DatagramSocket();
-					IPAddress = InetAddress.getByName(chatHost);
-				} catch (SocketException e) {
-					e.printStackTrace();
-				} catch (UnknownHostException e) {
-					e.printStackTrace();
-				}
-				BufferedReader inFromUser = new BufferedReader(new InputStreamReader(System.in));
-				String sentence = "";
-				while(true) {
-					try {
-						clientSocket.setSoTimeout(0);
-						sentence = inFromUser.readLine();
-						sendData = sentence.getBytes();
-						if(sendData != ok) {
-							msg.addMessage(benutzername, sentence);
-							received = false;
-						} 
-						for(int i = 0; i < 4; i++) {
-							DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, IPAddress, chatPort);
-							System.out.println("SENDING: " + sentence);
-							clientSocket.send(sendPacket);
-							if(received)
-								break;
-							try {
-								sleep(2000);
-							} catch (InterruptedException e) {
-								e.printStackTrace();
-							}
-						}
-					} catch (IOException e) {
-						e.printStackTrace();
-					}
-				}
-			}
-		};
+		sendingThread = new SendingThread(this, chatHost, chatPort);
 		sendingThread.start();
 	}
 
@@ -398,6 +324,38 @@ public class Client {
 	}
 
 	public void removeMessageListeners() {
+	}
+
+	public boolean isReceived() {
+		return received;
+	}
+
+	public void setReceived(boolean received) {
+		this.received = received;
+	}
+
+	public boolean isSent() {
+		return sent;
+	}
+
+	public void setSent(boolean sent) {
+		this.sent = sent;
+	}
+
+	public MessageListe getMsg() {
+		return msg;
+	}
+
+	public void setMsg(MessageListe msg) {
+		this.msg = msg;
+	}
+
+	public String getBenutzername() {
+		return benutzername;
+	}
+
+	public void setBenutzername(String benutzername) {
+		this.benutzername = benutzername;
 	}
 
 
