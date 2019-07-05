@@ -6,6 +6,7 @@ from socket import *
 from pydispatch import dispatcher
 
 import threading 
+from pip._internal.cli.cmdoptions import client_cert
 
 
 
@@ -27,6 +28,12 @@ class ClientPy:
     def __init__(self):
         self.anfrageliste = []
         self.nutzerliste = []
+        self.sendeTreads = []
+        self.chatEmpfangenThreads = []
+        
+        self.udpIP = ""
+        self.udpPort = ""
+        self.clientSocket
         #Server TCP Verbindung
         self.socket = socket(AF_INET, SOCK_STREAM)
         self.socket.connect((serverName,serverPort))
@@ -97,25 +104,46 @@ class ClientPy:
         chatHostAdresse = line.split(" ")[2]
         meinPort = int(line.split(" ")[3])
         
+        chatPartner = line.split(" ")[4]
+        
         #neuer Sochet fuer UDP ?
-        clientSocket = socket(AF_INET, SOCK_DGRAM)
-        chatEmpfangenThread = threading.Thread(target = self.chatEmpfangen)
-        sendThread = threading.Thread(target = self.chatSenden, args=(chatHostAdresse, chatPort))
+        self.clientSocket = socket(AF_INET, SOCK_DGRAM)
+        chatEmpfangenThread = threading.Thread(target = self.chatEmpfangen, clientSocket)
+        #sendThread = threading.Thread(target = self.chatSenden, args=(chatHostAdresse, chatPort, clientSocket))
         chatEmpfangenThread.start()
-        sendThread.start()
+        #sendThread.start()
+        
+        #self.sendeTreads.append([clientSocket, sendThread])
+        self.chatEmpfangenThreads.append([clientSocket, chatEmpfangenThread])
         
     def chatEmpfangen(self):
         while(True):
-            modifiedMessage, serverAddress = socket.recvfrom(2048)
+            modifiedMessage, serverAddress = self.clientSocket.recvfrom(2048)
+            print(modifiedMessage)
             
-    def chatSenden(self, udpIP, udpPort):
+    '''def chatSenden(self, udpIP, udpPort,clientSocket):
         while(True):
             message = bytes(input("Chat sentence you: "), 'utf-8')
-            #IP des Chatpartners + port
-            #socket.sendto(MESSAGE, (udpIP, udpPort))
+            clientSocket.sendto(MESSAGE, (udpIP, udpPort))'''
+            
+    def send(message):  
+        clientSocket.sendto(message, (self.udpIP, self.udpPort))
+        
     
-    def endUdpConnection(self, socket):
+    def endUdpConnection(self):
         print("threads beenden")
+        #for thread in self.sendeTreads:
+        #   if i[0] == clientsocket:
+        #        i[1].stop()
+        #       self.sendeTreads.remove(i)
+            
+        for thread in self.chatEmpfangenThreads:
+            if i[0] == self.clientsocket:
+                i[1].stop()
+                self.chatEmpfangenThreads.remove(i)
+        self.clientSocket.close()
+                
+                
         
         
         
