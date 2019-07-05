@@ -33,7 +33,7 @@ class ClientPy:
         
         self.udpIP = ""
         self.udpPort = ""
-        self.clientSocket
+        self.clientSocket = ""
         #Server TCP Verbindung
         self.socket = socket(AF_INET, SOCK_STREAM)
         self.socket.connect((serverName,serverPort))
@@ -108,13 +108,13 @@ class ClientPy:
         
         #neuer Sochet fuer UDP ?
         self.clientSocket = socket(AF_INET, SOCK_DGRAM)
-        chatEmpfangenThread = threading.Thread(target = self.chatEmpfangen, clientSocket)
+        chatEmpfangenThread = threading.Thread(target = self.chatEmpfangen)
         #sendThread = threading.Thread(target = self.chatSenden, args=(chatHostAdresse, chatPort, clientSocket))
         chatEmpfangenThread.start()
         #sendThread.start()
         
         #self.sendeTreads.append([clientSocket, sendThread])
-        self.chatEmpfangenThreads.append([clientSocket, chatEmpfangenThread])
+        self.chatEmpfangenThreads.append([self.clientSocket, chatEmpfangenThread])
         
     def chatEmpfangen(self):
         while(True):
@@ -122,12 +122,13 @@ class ClientPy:
             print(modifiedMessage)
             
     '''def chatSenden(self, udpIP, udpPort,clientSocket):
+        wh chatSenden(self, udpIP, udpPort,clientSocket):
         while(True):
             message = bytes(input("Chat sentence you: "), 'utf-8')
             clientSocket.sendto(MESSAGE, (udpIP, udpPort))'''
             
-    def send(message):  
-        clientSocket.sendto(message, (self.udpIP, self.udpPort))
+    def send(self, message):
+        self.clientSocket.sendto(message, (self.udpIP, self.udpPort))
         
     
     def endUdpConnection(self):
@@ -137,7 +138,7 @@ class ClientPy:
         #        i[1].stop()
         #       self.sendeTreads.remove(i)
             
-        for thread in self.chatEmpfangenThreads:
+        for i in self.chatEmpfangenThreads:
             if i[0] == self.clientsocket:
                 i[1].stop()
                 self.chatEmpfangenThreads.remove(i)

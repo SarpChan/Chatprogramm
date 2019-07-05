@@ -240,8 +240,8 @@ class Fenster(QWidget):
         msg.setText("Neue Chatanfrage von" + anfrager)
         msg.setWindowTitle("Chatanfrage")
         msg.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
-        retval = msg.exec_()
-        print(retval)
+        msg.exec_()
+
 
 
 
