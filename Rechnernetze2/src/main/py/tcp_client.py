@@ -200,6 +200,7 @@ class ClientPy:
                  self.loggedIn = False
                  dispatcher.send(signal=self.ausgeloggt, sender=dispatcher.Any)
                  self.socket.close()
+                 break
 
 
                 
