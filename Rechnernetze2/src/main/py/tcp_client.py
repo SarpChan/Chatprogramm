@@ -27,6 +27,8 @@ class ClientPy:
     def __init__(self):
         self.anfrageliste = []
         self.nutzerliste = []
+        self.sendeTreads = []
+        self.chatEmpfangenThreads = []
         #Server TCP Verbindung
         self.socket = socket(AF_INET, SOCK_STREAM)
         self.socket.connect((serverName,serverPort))
@@ -99,23 +101,37 @@ class ClientPy:
         
         #neuer Sochet fuer UDP ?
         clientSocket = socket(AF_INET, SOCK_DGRAM)
-        chatEmpfangenThread = threading.Thread(target = self.chatEmpfangen)
-        sendThread = threading.Thread(target = self.chatSenden, args=(chatHostAdresse, chatPort))
+        chatEmpfangenThread = threading.Thread(target = self.chatEmpfangen, clientSocket)
+        sendThread = threading.Thread(target = self.chatSenden, args=(chatHostAdresse, chatPort, clientSocket))
         chatEmpfangenThread.start()
         sendThread.start()
         
-    def chatEmpfangen(self):
+        self.sendeTreads.append([clientSocket, sendThread])
+        self.chatEmpfangenThreads.append([clientSocket, chatEmpfangenThread])
+        
+    def chatEmpfangen(self,clientSocket):
         while(True):
-            modifiedMessage, serverAddress = socket.recvfrom(2048)
+            modifiedMessage, serverAddress = clientSocket.recvfrom(2048)
+            print(modifiedMessage)
             
-    def chatSenden(self, udpIP, udpPort):
+    def chatSenden(self, udpIP, udpPort,clientSocket):
         while(True):
             message = bytes(input("Chat sentence you: "), 'utf-8')
-            #IP des Chatpartners + port
-            #socket.sendto(MESSAGE, (udpIP, udpPort))
+            clientSocket.sendto(MESSAGE, (udpIP, udpPort))
     
-    def endUdpConnection(self, socket):
+    def endUdpConnection(self, clientsocket):
         print("threads beenden")
+        for thread in self.sendeTreads:
+            if i[0] == clientsocket:
+                i[1].stop()
+                self.sendeTreads.remove(i)
+            
+        for thread in self.chatEmpfangenThreads:
+            if i[0] == clientsocket:
+                i[1].stop()
+                self.chatEmpfangenThreads.remove(i)
+                
+                
         
         
         
