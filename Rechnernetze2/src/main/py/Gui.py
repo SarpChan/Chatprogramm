@@ -7,15 +7,6 @@ from pydispatch import dispatcher
 from Chatprogramm.Rechnernetze2.src.main.py.tcp_client import ClientPy, registOKEvent
 #from Chatprogramm.Chatprogramm.Rechnernetze2.src.main.py.tcp_client import UpdatedListeEvent
 
-class Dialog(Widget):
-    def __init__(self):
-        super().__init__()
-
-        self.setStyleSheet("""QListWidget{
-                                    background: gray;
-                                }
-                                """
-                           )
 
 class Fenster(QWidget):
     def __init__(self):
@@ -35,6 +26,7 @@ class Fenster(QWidget):
         self.loginView = QWidget()
         self.chatView = QWidget()
         self.nutzerView = QWidget()
+        self.dialogView = QWidget()
         self.lBox = QVBoxLayout()
         self.nBox = QVBoxLayout()
         self.cBox = QVBoxLayout()
@@ -43,8 +35,6 @@ class Fenster(QWidget):
         self.disposeWidget = QWidget()
         self.stacked = QStackedWidget()
         self.mainlayout = QVBoxLayout()
-
-        self.dialog = QWidget()
         self.diaText = QLabel()
         self.accept = QPushButton("acccept")
         self.refuse = QPushButton("refuse")
@@ -76,8 +66,8 @@ class Fenster(QWidget):
 
     def initMe(self):
 
-
         ### DIALOG
+
         self.accRef.addStretch()
         self.accRef.addWidget(self.accept)
         self.accRef.addWidget(self.refuse)
@@ -88,12 +78,10 @@ class Fenster(QWidget):
         self.diaBox.addLayout(self.accRef)
         self.diaBox.addStretch()
 
-        self.dialog.setLayout(self.diaBox)
+        self.accept.clicked.connect(self.akzeptiere)
+        self.refuse.clicked.connect(self.ablehnen)
 
-        self.setGeometry(0, 0, 400, 600)
-        self.setWindowTitle("Chatprogramm")
-        self.setFixedSize(400, 600)
-        self.show()
+        self.dialogView.setLayout(self.diaBox)
 
         #### LOGIN FENSTER
 
@@ -140,6 +128,7 @@ class Fenster(QWidget):
         self.stacked.addWidget(self.loginView)
         self.stacked.addWidget(self.chatView)
         self.stacked.addWidget(self.nutzerView)
+        self.stacked.addWidget(self.dialogView)
 
         self.mainlayout.addWidget(self.stacked)
         self.stacked.setCurrentIndex(1)
@@ -150,10 +139,10 @@ class Fenster(QWidget):
 
         print(self.stacked.currentWidget())
 
-        self.dialog.setGeometry(100, 100, 400, 150)
-        self.dialog.setWindowTitle("Chatanfrage")
-        self.dialog.setFixedSize(400, 150)
-
+        self.setGeometry(0, 0, 400, 600)
+        self.setWindowTitle("Chatprogramm")
+        self.setFixedSize(400, 600)
+        self.show()
 
 
         ### Uebergreifend
@@ -207,10 +196,16 @@ class Fenster(QWidget):
         dispatcher.connect(self.switchToLogin, signal = "logout", sender= dispatcher.Any)
         dispatcher.connect(self.refillNutzerliste, signal = "refillNutzer", sender= dispatcher.Any)
         dispatcher.connect(self.refillChat, signal = "refillChat", sender= dispatcher.Any)
-        dispatcher.connect(self.showChatAnfrage, signal = "neueChatAnfrage", sender= dispatcher.Any)
+        dispatcher.connect(self.switchToDialog, signal = "neueChatAnfrage", sender= dispatcher.Any)
+        dispatcher.connect(self.neueNachricht, signal = "neueNachricht", sender = dispatcher.Any)
 
+    def neueNachricht(self, message, user ):
+        self.chatliste.addItem(user + " : " + message)
 
-
+    def akzeptiere(self):
+        self.c.answerUdpConnection(True)
+    def ablehnen(self):
+        self.c.answerUdpConnection(False)
 
     def textFeldChanged(self):
         #absenden Button aktivieren?
@@ -230,9 +225,9 @@ class Fenster(QWidget):
 
     def absenden(self):
         #Nachricht absenden
-        #TODO Nachricht an Client senden
-        message = self.textFeld.toPlainText()
 
+        message = self.textFeld.toPlainText()
+        self.c.send(message)
         self.addToChat(self.c.benutzername +" : " + message);
         self.textFeld.clear()
 
@@ -304,6 +299,11 @@ class Fenster(QWidget):
         self.currentView = self.loginView
         self.stacked.setCurrentIndex(0)
         self.show()
+
+    def switchToDialog(self, anfrager):
+        self.diaText.setText("Neue Anfrage von " + anfrager)
+        self.stacked.setCurrentIndex(3)
+        self.show
 
 
     def abmelden(self):

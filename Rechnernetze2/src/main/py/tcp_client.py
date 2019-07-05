@@ -45,6 +45,7 @@ class ClientPy:
         self.ausgeloggt = 'logout'
         self.refillNutzer = 'refillNutzer'
         self.neueChatAnfrage = 'neueChatAnfrage'
+        self.neueNachricht = "neueNachricht"
         t = threading.Thread(target = self.processReceived)
         t.start()
         
@@ -120,12 +121,16 @@ class ClientPy:
         while(True):
             modifiedMessage, serverAddress = self.clientSocket.recvfrom(2048)
             print(modifiedMessage)
+            #self.nachrichtZuChatListe(user + sender, message, sender)
             
     '''def chatSenden(self, udpIP, udpPort,clientSocket):
         wh chatSenden(self, udpIP, udpPort,clientSocket):
         while(True):
             message = bytes(input("Chat sentence you: "), 'utf-8')
             clientSocket.sendto(MESSAGE, (udpIP, udpPort))'''
+
+
+
             
     def send(self, message):
         self.clientSocket.sendto(message, (self.udpIP, self.udpPort))
@@ -145,7 +150,11 @@ class ClientPy:
         self.clientSocket.close()
                 
                 
-        
+    def nachrichtZuChatliste( key,  message, sender):
+
+        #TODO ZU Liste hinzu
+        dispatcher.send(signal="neueNachricht", sender = dispatcher.Any, user = sender, message = message )
+
         
         
     def processReceived(self):
