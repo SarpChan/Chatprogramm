@@ -33,6 +33,7 @@ public class Client {
 	private BooVariable loggedIn = new BooVariable(false);
 	private BooVariable chatanfrage = new BooVariable(false);
 	private Map<String, MessageListe> nachrichten = new HashMap<>();
+	private ObservableString chatPartner = new ObservableString();
 	private boolean received = true;
 
 
@@ -175,13 +176,16 @@ public class Client {
 
 		String chatpartner = data[4];
 		MessageListe msg;
-
+		//saveChats();
 		loadChats();
-		if(nachrichten.containsKey(benutzername + chatpartner))
+		
+		if(nachrichten.containsKey(benutzername + chatpartner)){
 			msg = nachrichten.get(benutzername + chatpartner);
-		else {
+			this.chatPartner.setString(benutzername + chatpartner);
+		}else {
 			msg = new MessageListe(benutzername, chatpartner);
 			nachrichten.put(benutzername + chatpartner, msg);
+			this.chatPartner.setString(benutzername + chatpartner);
 		}	
 
 		receivingThread = new Thread() {
@@ -343,7 +347,7 @@ public class Client {
 			Gson gson = null;
 			gson = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create();
 			try {
-				gson.toJson(x, new FileWriter("Chatprogramm/Rechnernetze2/src/main/java/resources" + x.getUser() + x.getOtherUser() + ".json"));
+				gson.toJson(x, new FileWriter("Rechnernetze2/src/main/java/resources" + x.getUser() + x.getOtherUser() + ".json"));
 			} catch (JsonIOException e) {
 				e.printStackTrace();
 			} catch (IOException e) {
@@ -355,7 +359,7 @@ public class Client {
 
 	public void loadChats() {
 
-		final File folder = new File("Chatprogramm/Rechnernetze2/src/main/java/resources");
+		final File folder = new File("Rechnernetze2/src/main/java/resources");
 
 		for (final File fileEntry : folder.listFiles()) {
 			if (fileEntry.isDirectory()) {
@@ -382,6 +386,18 @@ public class Client {
 
 	public List<Message> openChat(String key){
 		return this.nachrichten.get(key).getListe() == null? null: this.nachrichten.get(key).getListe();
+	}
+
+	public ObservableString getObservableString(){
+		return this.chatPartner;
+	}
+
+	public MessageListe getActMessageListe() {
+
+		return nachrichten.get(this.chatPartner.getString());
+	}
+
+	public void removeMessageListeners() {
 	}
 
 

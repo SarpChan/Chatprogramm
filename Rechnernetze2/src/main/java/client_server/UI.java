@@ -60,7 +60,8 @@ public class UI extends JFrame {
 	private Client client;
 	private CustomJList<String> nutzerliste;
 	private CustomJList<Message> nachrichten;
-	private DefaultListModel<String> nutzerModel, chatModel;
+	private DefaultListModel<String> nutzerModel;
+	private DefaultListModel<Message> chatModel;
 	private Dimension centerDim;
 	private JOptionPane optionPane;
 	private ArrayList<JDialog> dialog = new ArrayList();
@@ -83,12 +84,13 @@ public class UI extends JFrame {
 		this.areaScrollPane = new JScrollPane(this.textArea);
 		this.registrierPanel = new JPanel();
 		this.nutzerModel = new DefaultListModel<>();
-		this.chatModel = new DefaultListModel<>();
+		
 
 		this.nutzerliste = new CustomJList<>(nutzerModel);
 		this.nutzerAnzeige = new JScrollPane(this.nutzerliste);
 		this.nutzerliste.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 
+		this.chatModel = new DefaultListModel<>();
 		this.nachrichten = new CustomJList<>(chatModel);
 		this.nachrichten.setCellRenderer(new messageCellRenderer());
 		this.chatFenster = new JScrollPane(this.nachrichten);
@@ -120,7 +122,6 @@ public class UI extends JFrame {
 					int index = list.locationToIndex(e.getPoint());
 					Object name = list.getModel().getElementAt(index);
 					client.requestUdpConnection(name.toString());
-					switchView(Views.CHAT);
 				}
 			}
 		});
@@ -396,6 +397,31 @@ public class UI extends JFrame {
 			}
 		});
 
+		this.client.getObservableString().setListener(new ObservableString.ChangeListener(){
+		
+			@Override
+			public void onChange() {
+				
+				client.removeMessageListeners();
+
+				client.getActMessageListe().setListener(new MessageListe.ChangeListener(){
+				
+					@Override
+					public void onChange() {
+						chatModel.clear();
+						for (Message ele : client.getActMessageListe().getListe()) {
+							chatModel.addElement(ele);
+						}
+					}
+				});
+				chatModel.clear();
+				for (Message ele : client.getActMessageListe().getListe()) {
+					chatModel.addElement(ele);
+					}
+				switchView(Views.CHAT);
+				
+			}
+		});
 
         this.client.getChatanfrage().setListener(new BooVariable.ChangeListener(){
 
