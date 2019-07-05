@@ -266,7 +266,7 @@ public class Client {
 			Gson gson = null;
 			gson = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create();
 			try {
-				gson.toJson(x, new FileWriter("C:\\Users\\Julia\\git\\Chatprogramm\\Rechnernetze2\\src\\main\\java\\resources" + x.getUser() + x.getOtherUser() + ".json"));
+				gson.toJson(x, new FileWriter("Rechnernetze2/src/main/java/resources" + x.getUser() + x.getOtherUser() + ".json"));
 			} catch (JsonIOException e) {
 				e.printStackTrace();
 			} catch (IOException e) {
@@ -278,7 +278,7 @@ public class Client {
 
 	public void loadChats() {
 
-		final File folder = new File("C:\\Users\\Julia\\git\\Chatprogramm\\Rechnernetze2\\src\\main\\java\\resources");
+		final File folder = new File("Rechnernetze2/src/main/java/resources");
 
 		for (final File fileEntry : folder.listFiles()) {
 			if (fileEntry.isDirectory()) {

@@ -3,8 +3,10 @@ from PyQt5.QtCore import QObject, pyqtSignal
 
 
 from socket import *
+from pydispatch import dispatcher
 
 import threading 
+from pip._internal.cli.cmdoptions import client_cert
 
 
 
@@ -18,16 +20,31 @@ import threading
 serverName = "localhost"
 serverPort = 27999
 
+
+class registOKEvent(QObject):
+    registokEvent = pyqtSignal();
+
 class ClientPy:
     def __init__(self):
-
+        self.anfrageliste = []
         self.nutzerliste = []
+        self.sendeTreads = []
+        self.chatEmpfangenThreads = []
+        
+        self.udpIP = ""
+        self.udpPort = ""
+        self.clientSocket
         #Server TCP Verbindung
         self.socket = socket(AF_INET, SOCK_STREAM)
         self.socket.connect((serverName,serverPort))
         self.benutzername = ""
         self.loggedIn = False;
-        
+        self.sig = registOKEvent()
+        self.logRegErfolgSig = 'logErfolg'
+        self.chatAufgebaut = 'chatErfolg'
+        self.ausgeloggt = 'logout'
+        self.refillNutzer = 'refillNutzer'
+        self.neueChatAnfrage = 'neueChatAnfrage'
         t = threading.Thread(target = self.processReceived)
         t.start()
         
@@ -75,33 +92,58 @@ class ClientPy:
         self.sendText("2 " + name)
         
     def answerUdpConnection(self, bool):
+        print("hallo")
         if(bool):
-            sendText("8 " + chatanfrage.getVon());
+            self.sendText("8 " + self.anfrageliste[-1]);
         else:
-            sendText("9 " + chatanfrage.getVon());
+            self.sendText("9 " + self.anfrageliste[-1]);
+        
     
     def buildUdpConnection(self, line):
         chatPort = int(line.split(" ")[1])
         chatHostAdresse = line.split(" ")[2]
         meinPort = int(line.split(" ")[3])
         
+        chatPartner = line.split(" ")[4]
+        
         #neuer Sochet fuer UDP ?
-        clientSocket = socket(AF_INET, SOCK_DGRAM)
-        chatEmpfangenThread = threading.Thread(target = self.chatEmpfangen)
-        sendThread = threading.Thread(target = self.chatSenden, args=(chatHostAdresse, chatPort))
-    
+        self.clientSocket = socket(AF_INET, SOCK_DGRAM)
+        chatEmpfangenThread = threading.Thread(target = self.chatEmpfangen, clientSocket)
+        #sendThread = threading.Thread(target = self.chatSenden, args=(chatHostAdresse, chatPort, clientSocket))
+        chatEmpfangenThread.start()
+        #sendThread.start()
+        
+        #self.sendeTreads.append([clientSocket, sendThread])
+        self.chatEmpfangenThreads.append([clientSocket, chatEmpfangenThread])
+        
     def chatEmpfangen(self):
-        while(true):
-            modifiedMessage, serverAddress = socket.recvfrom(2048)
+        while(True):
+            modifiedMessage, serverAddress = self.clientSocket.recvfrom(2048)
+            print(modifiedMessage)
             
-    def chatSenden(self, udpIP, udpPort):
-        while(true):
+    '''def chatSenden(self, udpIP, udpPort,clientSocket):
+        while(True):
             message = bytes(input("Chat sentence you: "), 'utf-8')
-            #IP des Chatpartners + port
-            socket.sendto(MESSAGE, (udpIP, udpPort))
+            clientSocket.sendto(MESSAGE, (udpIP, udpPort))'''
+            
+    def send(message):  
+        clientSocket.sendto(message, (self.udpIP, self.udpPort))
+        
     
-    def endUdpConnection(self, socket):
+    def endUdpConnection(self):
         print("threads beenden")
+        #for thread in self.sendeTreads:
+        #   if i[0] == clientsocket:
+        #        i[1].stop()
+        #       self.sendeTreads.remove(i)
+            
+        for thread in self.chatEmpfangenThreads:
+            if i[0] == self.clientsocket:
+                i[1].stop()
+                self.chatEmpfangenThreads.remove(i)
+        self.clientSocket.close()
+                
+                
         
         
         
@@ -114,33 +156,51 @@ class ClientPy:
             
             ''' Chatanfrage bekommen'''
             if antwort.split(" ")[0] == "5":
+                
                 print("Chat anfrage von " + antwort.split(" ")[1])
+                self.anfrageliste.append(antwort.split(" ")[1])
+                dispatcher.send(signal = self.neueChatAnfrage, sender = dispatcher.Any, anfrager = antwort.split(" ")[1])
+
             
                 ''' erfolgreiches einloggen/ registrieren '''
             elif antwort.split(" ")[0] == "1" or antwort.split(" ")[0] == "0" : 
                 if antwort.split(" ")[1] == "200":
-                    self.loggedIn = True 
+                    self.loggedIn = True
+                    dispatcher.send(signal = self.logRegErfolgSig, sender = dispatcher.Any)
+
+
+
                       
                 ''' Chatanfrage angenommen'''
             elif antwort.split(" ")[0] == "2":
                 self.buildUdpConnection(antwort)
+                dispatcher.send(signal = self.chatAufgebaut, sender = dispatcher.Any)
                 print("Chat anfrage angenommen")
                 
                 ''' erfolgreich ausgelogged'''
-            elif antwort == "3 200":
-                self.loggedIn = False
-                
+            elif antwort.split(" ")[0] == "3":
+
+                if antwort.split(" ")[1] == '200':
+                    self.loggedIn = False
+
+                    dispatcher.send(signal = self.ausgeloggt, sender = dispatcher.Any)
+
                 ''' Aktive Nutzerliste '''
             elif antwort.split(" ")[0] == "7":
                 print(antwort)
                 if len(antwort.split(" ")) > 1:
-                    self.nutzerliste = antwort.split(" ")[1:]
-                    print("nuterliste " + self.nutzerliste[0])
+                    self.nutzerliste = []
+                    self.nutzerliste = antwort.split(" ")[1:-1]
+                    dispatcher.send(signal = self.refillNutzer, sender = dispatcher.Any, liste = self.nutzerliste)
+                    print(self.nutzerliste)
                 
                 '''Schliessen'''
             elif antwort.split(" ")[0] == "6":
                  self.loggedIn = False
+                 dispatcher.send(signal=self.ausgeloggt, sender=dispatcher.Any)
                  self.socket.close()
+
+
                 
     
 def main():   

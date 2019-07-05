@@ -39,7 +39,9 @@ public class Teilserver {
 
 			@Override
 			public void onChange() {
+				
 				handleActiveUserReq(user);
+				
 			}
 		});
 	}
@@ -105,6 +107,7 @@ public class Teilserver {
 			} 
 			writer.write("\n");
 			writer.flush();
+			
 		}
 		catch(IOException e){
 			e.printStackTrace();
@@ -219,10 +222,11 @@ public class Teilserver {
 
 	public void handleAbmelden(String [] line) {
 		String benutzername = line[1];
-		nutzerverw.removeActiveUser(benutzername);
+		
 		try {
-			writer.write("3 200" + "\n");
+			writer.write("3 200" + " \n");
 			writer.flush();
+			nutzerverw.removeActiveUser(benutzername);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -231,12 +235,13 @@ public class Teilserver {
 
 	public void handleSchliessen(String [] line){
 		String benutzername = line[1];
-		nutzerverw.removeActiveUser(benutzername);
+		
 
 		try {
 			writer.write("6 200" + "\n");
 			writer.flush();
 			socket.close();	
+			nutzerverw.removeActiveUser(benutzername);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

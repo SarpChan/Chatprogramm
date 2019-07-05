@@ -2,8 +2,9 @@ import sys
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
-from tcp_client import ClientPy
-#import Chatprogramm.Rechnernetze2.src.main.py.tcp_client
+from pydispatch import dispatcher
+#from tcp_client import *
+from Chatprogramm.Rechnernetze2.src.main.py.tcp_client import ClientPy, registOKEvent
 #from Chatprogramm.Chatprogramm.Rechnernetze2.src.main.py.tcp_client import UpdatedListeEvent
 
 
@@ -17,6 +18,7 @@ class Fenster(QWidget):
                         }
                         """
                            )
+        self.c = ClientPy()
         self.login = QPushButton("Login")
         self.register = QPushButton("Register")
         self.logReg = QHBoxLayout()
@@ -53,6 +55,7 @@ class Fenster(QWidget):
 
         self.nutzerliste = QListWidget()
         self.chatliste = QListWidget()
+        self.sig = registOKEvent()
 
         self.initMe()
 
@@ -71,6 +74,7 @@ class Fenster(QWidget):
         self.register.setDisabled(True)
 
         self.username.textChanged.connect(self.loginChange)
+        self.sig.registokEvent.connect(self.switchToHome)
 
         self.userBox.addStretch()
         self.userBox.addWidget(self.user)
@@ -123,6 +127,7 @@ class Fenster(QWidget):
        
         
         self.chatBack.clicked.connect(self.back)
+        self.chatAbmelden.clicked.connect(self.abmelden)
         self.chatTop.addStretch()
         self.chatTop.addWidget(self.chatBack)
         self.chatTop.addWidget(self.chatAbmelden)
@@ -148,6 +153,7 @@ class Fenster(QWidget):
         ### NUTZER
 
         self.nutzerBack.clicked.connect(self.back)
+        self.nutzerAbmelden.clicked.connect(self.abmelden)
         self.nutzerTop.addStretch()
         self.nutzerTop.addWidget(self.nutzerBack)
         self.nutzerTop.addWidget(self.nutzerAbmelden)
@@ -159,7 +165,18 @@ class Fenster(QWidget):
         self.nutzerView.setLayout(self.nBox)
 
         self.nutzerliste.setSelectionMode(QAbstractItemView.SingleSelection)
+        self.nutzerliste.itemClicked.connect(self.chatWith)
         #self.nutzerliste.itemSelectionChanged(self.chatView)
+
+        dispatcher.connect(self.switchToHome, signal = "logErfolg", sender= dispatcher.Any)
+        dispatcher.connect(self.switchToChat, signal = "chatErfolg", sender= dispatcher.Any)
+        dispatcher.connect(self.switchToLogin, signal = "logout", sender= dispatcher.Any)
+        dispatcher.connect(self.refillNutzerliste, signal = "refillNutzer", sender= dispatcher.Any)
+        dispatcher.connect(self.refillChat, signal = "refillChat", sender= dispatcher.Any)
+        dispatcher.connect(self.showChatAnfrage, signal = "neueChatAnfrage", sender= dispatcher.Any)
+
+
+
 
     def textFeldChanged(self):
         #absenden Button aktivieren?
@@ -181,35 +198,26 @@ class Fenster(QWidget):
         #Nachricht absenden
         #TODO Nachricht an Client senden
         message = self.textFeld.toPlainText()
-        #TODO message objekt erstellen mit LocalDateTime, sender, text
-        self.addToChat(message)
+
+        self.addToChat(self.c.benutzername +" : " + message);
+        self.textFeld.clear()
 
 
     def einloggen(self):
-        #Beim Server einloggen
-        #TODO Client einloggen
-
-        self.username.text()
-        self.password.text()
         
-        c.login(self.username.text(), self.password.text(), "1")
-        
+        self.c.login(self.username.text(), self.password.text(), "1")
 
-        self.switchView("Nutzer")
+
 
     def registrieren(self):
-        #Beim Server registrieren
-        #TODO Clien registrieren
-        self.username.text()
-        self.password.text()
-        self.switchView("Chat")
-        
-        c.login(self.username.text(), self.password.text(), "0")
+
+        self.c.login(self.username.text(), self.password.text(), "0")
+
 
     def refillNutzerliste(self, liste):
         #Nutzerliste neu befuellen
         self.nutzerliste.clear()
-        liste = c.nutzerliste
+
         self.nutzerliste.addItems(liste)
         
 
@@ -220,53 +228,67 @@ class Fenster(QWidget):
     def addToChat(self, text):
         self.chatliste.addItem(text)
 
-    def chatWith(self):
-        print("hallo")
-        #TODO Client Chatanfrage an chatPartner
+    def chatWith(self, item):
+        self.c.requestUdpConnection(item.text())
+
+    def showChatAnfrage(self, anfrager):
+
+
+
+        msg = QMessageBox()
+
+        msg.setText("Neue Chatanfrage von" + anfrager)
+        msg.setWindowTitle("Chatanfrage")
+        msg.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
+        retval = msg.exec_()
+        print(retval)
+
 
 
     def back(self):
         #Zurueck zur letzten Ansicht
-        if self.currentView != 0:
+        if self.lastView != 0:
             temp = self.lastView
             self.lastView =  self.currentView
             self.currentView =  temp
             self.stacked.setCurrentIndex(self.currentView)
-
-    def switchView(self, whereTo):
-        #Ansicht wechseln
-        if whereTo == "Chat":
-
-            self.lastView = self.currentView
-            self.currentView = self.chatView
-            self.stacked.setCurrentIndex(1)
-
-        elif whereTo == "Nutzer":
-
-            self.lastView = self.currentView
-            self.currentView = self.nutzerView
-            self.stacked.setCurrentIndex(2)
+            self.show()
 
 
-        elif whereTo == "Login":
 
-            self.lastView = None
-            self.currentView = self.loginView
-            self.stacked.setCurrentIndex(0)
-
+    def switchToHome(self):
+        self.lastView = self.currentView
+        self.currentView = self.nutzerView
+        self.stacked.setCurrentIndex(2)
         self.show()
 
+    def switchToChat(self):
+        self.lastView = self.currentView
+        self.currentView = self.chatView
+        self.stacked.setCurrentIndex(1)
+        self.show()
+
+    def switchToLogin(self):
+        self.username.setText("")
+        self.password.setText("")
+        self.lastView = None
+        self.currentView = self.loginView
+        self.stacked.setCurrentIndex(0)
+        self.show()
+
+
     def abmelden(self):
-        #TODO Client abmelden
+
         print("test")
-        c.closeConnection()
-        self.switchView("Login")
+        self.c.closeConnection()
+
 
 def main():
     app = QApplication(sys.argv)
     w = Fenster()
+
     sys.exit(app.exec_())
-    c = ClientPy()
+
 if __name__== "__main__":
     main()
     
