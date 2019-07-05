@@ -1,63 +1,18 @@
-__author__ = 'schaible'
-from PyQt5.QtCore import QObject, pyqtSignal
 
-"""  TCPClient.py
-Use the better name for this module:   MakeUpperCaseClientUsingTCP
+#from PyQt5.QtCore import QObject, pyqtSignal
 
-[STUDENTS FILL IN THE ITEMS BELOW]
-  STUDENT NAME
-  COURSE NAME and SEMESTER
-  DATE
-  This module will <blah, blah, blah>
-"""
 
 from socket import *
 
-# STUDENTS - replace your server machine's name
-'''serverName = "localhost"
-
-# STUDENTS - you should randomize your port number.
-# This port number in practice is often a "Well Known Number"
-#serverPort = 12000
-serverPort = 27999'''
-
-# create TCP socket on client to use for connecting to remote
-# server.  Indicate the server's remote listening port
-# Error in textbook?   socket(socket.AF_INET, socket.SOCK_STREAM)  Amer 4-2013
-'''clientSocket = socket(AF_INET, SOCK_STREAM)
-
-# open the TCP connection
-clientSocket.connect((serverName,serverPort))
-
-# interactively get user's line to be converted to upper case
-# authors' use of raw_input changed to input for Python 3  Amer 4-2013
-
-#sentence = raw_input("Input lowercase sentence: ")
+import threading 
 
 
 
- 
-# send the user's line over the TCP connection
-# No need to specify server name, port
-# sentence casted to bytes for Python 3  Amer 4-2013
+#from thread import start_new_thread
 
-#clientSocket.sendall(sentence)
-#client_socket.sendall(bytes(sentence , "utf8"))  
 
-clientSocket.sendall("hello/n")
-#output to console what is sent to the server
-#print ("Sent to Server: ", sentence)
-
-# get user's line back from server having been modified by the server
-modifiedSentence = clientSocket.recv(1024)
-
-# output the modified user's line
-print ("Received from Make Upper Case Server: ", modifiedSentence)
-
-# close the TCP connection
-clientSocket.close()'''
-class UpdatedListeEvent(QObject):
-    updatedEvent = pyqtSignal()
+#class UpdatedListeEvent(QObject):
+#    updatedEvent = pyqtSignal()
 
 
 serverName = "localhost"
@@ -67,61 +22,126 @@ class ClientPy:
     def __init__(self):
 
         self.nutzerliste = []
-       
-        self.clientSocket = socket(AF_INET, SOCK_STREAM)
-        self.clientSocket.connect((serverName,serverPort))
+        #Server TCP Verbindung
+        self.socket = socket(AF_INET, SOCK_STREAM)
+        self.socket.connect((serverName,serverPort))
         self.benutzername = ""
+        self.loggedIn = False;
         
     def sendText(self,text):
-        
         print("Sende an Server " + text)
         text = text + " \n"
-        #print(text.encode())
-        
-        self.clientSocket.send(text.encode())
-        antwort = self.clientSocket.recv(1024)
-        print("Vom Server empfangen: " + str(antwort))
+      
+        self.socket.send(text.encode())
+        #antwort = self.socket.recv(1024)
+        #print("Vom Server empfangen: " + str(antwort))
             
-        return str(antwort)
+        #return str(antwort)
         
-        
-
+    # 0 = Registrieren  1 = Login
     def login(self,username, password, option):
         print("login")
+        # "sichere" Übertragung des Passworts
         password = password[::-1] 
         line = option + " " + username + " " + password;
         
-        antwort = self.sendText(line)
-        if "200" in antwort:
-            self.benutzername = username;
-            return True
-        return False
+        self.sendText(line)
+        self.benutzername = username;
+       
     
         
     def closeConnection(self):
-        #if self.benutzername != "":
         text = self.sendText("3 " + self.benutzername)
             
-        if text.rfind("200"):
-            self.clientSocket.close()
+       
            
         
-        
+    def schliessen(self):
+        self.sendText("6 ");    
         
         
     def requestActiveUser(self):
         text = self.sendText("7 " + self.benutzername)
+        print(self.benutzername + "name")
         return text
 
 
+
+    # bei Server UDP-Connection mit user "name" anfragen
     def requestUdpConnection(self, name):
-        antwort = self.sendText("2 " + name)
-        print("tetst ", antwort)
+        self.sendText("2 " + name)
+        
+    def answerUdpConnection(self, bool):
+        if(bool):
+            sendText("8 " + chatanfrage.getVon());
+        else:
+            sendText("9 " + chatanfrage.getVon());
+    
+    def buildUdpConnection(self, line):
+        chatPort = int(line.split(" ")[1])
+        chatHostAdresse = line.split(" ")[2]
+        meinPort = int(line.split(" ")[3])
+        
+        #neuer Sochet fuer UDP ?
+        clientSocket = socket(AF_INET, SOCK_DGRAM)
+        chatEmpfangenThread = threading.Thread(target = self.chatEmpfangen)
+        sendThread = threading.Thread(target = self.chatSenden, args=(chatHostAdresse, chatPort))
+    
+    def chatEmpfangen(self):
+        while(true):
+            modifiedMessage, serverAddress = socket.recvfrom(2048)
+            
+    def chatSenden(self, udpIP, udpPort):
+        while(true):
+            message = bytes(input("Chat sentence you: "), 'utf-8')
+            #IP des Chatpartners + port
+            socket.sendto(MESSAGE, (udpIP, udpPort))
+    
+    def endUdpConnection(self, socket):
+        print("threads beenden")
         
         
+        
+    def processReceived(self):
+        while True:
+            
+            print("bin hier")
+            antwort = self.socket.recv(1024).decode("utf-8")
+            print("Vom Server empfangen", antwort)
+            
+            ''' Chatanfrage bekommen'''
+            if antwort.split(" ")[0] == "5":
+                print("Chat anfrage von " + antwort.split(" ")[1])
+            
+                ''' erfolgreiches einloggen/ registrieren '''
+            elif antwort.split(" ")[0] == "1" or antwort.split(" ")[0] == "0" : 
+                if antwort.split(" ")[1] == "200":
+                    self.loggedIn = True 
+                      
+                ''' Chatanfrage angenommen'''
+            elif antwort.split(" ")[0] == "2":
+                self.buildUdpConnection(antwort)
+                print("Chat anfrage angenommen")
+                
+                ''' erfolgreich ausgelogged'''
+            elif antwort == "3 200":
+                self.loggedIn = False
+                
+                ''' Aktive Nutzerliste '''
+            elif antwort.split(" ")[0] == "7":
+                self.nutzerliste = antwort.split(" ")[1:]
+            
+                '''Schliessen'''
+            elif antwort.split(" ")[0] == "6":
+                 self.loggedIn = False
+                 self.socket.close()
+                
+    
 def main():   
     c = ClientPy()
     
+    t = threading.Thread(target = c.processReceived)
+    t.start()
     #Registrieren:
    # log = c.login("o", "p", "0")
     #print(log)
@@ -135,9 +155,8 @@ def main():
         #
         #sentence = input("Input lowercase sentence: ")
         #c.sendText(sentence)
-        
-        
-    #c.closeConnection()
+      
+    c.closeConnection()
         
 main()
 
