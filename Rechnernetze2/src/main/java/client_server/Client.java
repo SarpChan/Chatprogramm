@@ -6,7 +6,10 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.net.SocketException;
+import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -15,6 +18,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonIOException;
 import com.google.gson.JsonSyntaxException;
+import com.google.gson.reflect.TypeToken;
 
 
 public class Client {
@@ -29,10 +33,11 @@ public class Client {
 	private BooVariable loggedIn = new BooVariable(false);
 	private BooVariable chatanfrage = new BooVariable(false);
 	private Map<String, MessageListe> nachrichten = new HashMap<>();
+	private ObservableString chatPartner = new ObservableString();
 	private boolean received = false;
 	private boolean sent = true;
 	private MessageListe msg;
-
+	
 
 	public class ServerThread extends Thread {
 		BufferedReader serverReader;
@@ -139,8 +144,8 @@ public class Client {
 
 	public void close() {
 		try {
-			System.out.println("Sende an Server: " + "3 " + getBenutzername());
-			sendText("3 " + getBenutzername());
+			System.out.println("Sende an Server: " + "3 " + benutzername);
+			sendText("3 " + benutzername);
 		} catch (NullPointerException e) {
 			e.printStackTrace();
 		}
@@ -203,7 +208,7 @@ public class Client {
 		line = option + " " + username + " " + reverse;
 		sendText(line);
 
-		setBenutzername(username);
+		benutzername = username;
 	}
 
 
@@ -307,6 +312,18 @@ public class Client {
 
 	public List<Message> openChat(String key){
 		return this.nachrichten.get(key).getListe() == null? null: this.nachrichten.get(key).getListe();
+	}
+
+	public ObservableString getObservableString(){
+		return this.chatPartner;
+	}
+
+	public MessageListe getActMessageListe() {
+
+		return nachrichten.get(this.chatPartner.getString());
+	}
+
+	public void removeMessageListeners() {
 	}
 
 	public boolean isReceived() {

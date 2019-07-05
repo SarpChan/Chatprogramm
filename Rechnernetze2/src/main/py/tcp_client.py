@@ -1,5 +1,5 @@
 
-#from PyQt5.QtCore import QObject, pyqtSignal
+from PyQt5.QtCore import QObject, pyqtSignal
 
 
 from socket import *
@@ -27,6 +27,9 @@ class ClientPy:
         self.socket.connect((serverName,serverPort))
         self.benutzername = ""
         self.loggedIn = False;
+        
+        t = threading.Thread(target = self.processReceived)
+        t.start()
         
     def sendText(self,text):
         print("Sende an Server " + text)
@@ -105,7 +108,7 @@ class ClientPy:
     def processReceived(self):
         while True:
             
-            print("bin hier")
+            
             antwort = self.socket.recv(1024).decode("utf-8")
             print("Vom Server empfangen", antwort)
             
@@ -129,8 +132,11 @@ class ClientPy:
                 
                 ''' Aktive Nutzerliste '''
             elif antwort.split(" ")[0] == "7":
-                self.nutzerliste = antwort.split(" ")[1:]
-            
+                print(antwort)
+                if len(antwort.split(" ")) > 1:
+                    self.nutzerliste = antwort.split(" ")[1:]
+                    print("nuterliste " + self.nutzerliste[0])
+                
                 '''Schliessen'''
             elif antwort.split(" ")[0] == "6":
                  self.loggedIn = False
@@ -140,8 +146,7 @@ class ClientPy:
 def main():   
     c = ClientPy()
     
-    t = threading.Thread(target = c.processReceived)
-    t.start()
+    
     #Registrieren:
    # log = c.login("o", "p", "0")
     #print(log)
@@ -156,9 +161,9 @@ def main():
         #sentence = input("Input lowercase sentence: ")
         #c.sendText(sentence)
       
-    c.closeConnection()
+    #c.closeConnection()
         
-main()
+#main()
 
 
 
