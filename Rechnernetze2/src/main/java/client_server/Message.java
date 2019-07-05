@@ -39,5 +39,9 @@ public class Message{
         this.sender = sender;
     }
 
+    public String toString(){
+        return this.sender + " " + this.dateTime.toString() + " " + this.message;
+    }
+
     
 }
