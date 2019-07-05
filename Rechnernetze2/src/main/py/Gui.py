@@ -2,7 +2,8 @@ import sys
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
-#from Chatprogramm.Rechnernetze2.src.main.py.tcp_client import UpdatedListeEvent
+#import Chatprogramm.Rechnernetze2.src.main.py.tcp_client
+#from Chatprogramm.Chatprogramm.Rechnernetze2.src.main.py.tcp_client import UpdatedListeEvent
 
 
 
@@ -154,9 +155,8 @@ class Fenster(QWidget):
 
         self.nutzerView.setLayout(self.nBox)
 
-
         self.nutzerliste.setSelectionMode(QAbstractItemView.SingleSelection)
-        self.nutzerliste.itemClicked(self.chatWith)
+        #self.nutzerliste.itemSelectionChanged(self.chatView)
 
     def textFeldChanged(self):
         #absenden Button aktivieren?
@@ -210,8 +210,8 @@ class Fenster(QWidget):
     def addToChat(self, text):
         self.chatliste.addItem(text)
 
-    def chatWith(self, message):
-        chatPartner = message.text()
+    def chatWith(self):
+        print("hallo")
         #TODO Client Chatanfrage an chatPartner
 
 

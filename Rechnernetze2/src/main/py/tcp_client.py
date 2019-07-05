@@ -123,12 +123,12 @@ def main():
     c = ClientPy()
     
     #Registrieren:
-    log = c.login("o", "p", "0")
-    print(log)
-    #while True:
+   # log = c.login("o", "p", "0")
+    #print(log)
+    ##while True:
     
         
-    c.requestUdpConnection("i")
+    #c.requestUdpConnection("i")
     #antwort = c.sendText("0 a b") 
     
      

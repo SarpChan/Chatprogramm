@@ -10,6 +10,9 @@ import java.awt.GridLayout;
 import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
+import java.awt.event.ComponentListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
@@ -55,7 +58,8 @@ public class UI extends JFrame {
 	private JPasswordField password;
 	private JButton absenden, registrieren, anmelden, abmelden, back;
 	private Client client;
-	private CustomJList<String> nutzerliste, nachrichten;
+	private CustomJList<String> nutzerliste;
+	private CustomJList<Message> nachrichten;
 	private DefaultListModel<String> nutzerModel, chatModel;
 	private Dimension centerDim;
 	private JOptionPane optionPane;
@@ -86,8 +90,25 @@ public class UI extends JFrame {
 		this.nutzerliste.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 
 		this.nachrichten = new CustomJList<>(chatModel);
+		this.nachrichten.setCellRenderer(new messageCellRenderer());
 		this.chatFenster = new JScrollPane(this.nachrichten);
 		this.chatFensterPanel = new JPanel();
+
+
+		ComponentListener l = new ComponentAdapter() {
+
+			@Override
+			public void componentResized(ComponentEvent e) {
+				// next line possible if list is of type JXList
+				// list.invalidateCellSizeCache();
+				// for core: force cache invalidation by temporarily setting fixed height
+				nachrichten.setFixedCellHeight(10);
+				nachrichten.setFixedCellHeight(-1);
+			}
+	
+		};
+	
+		nachrichten.addComponentListener(l);
 
 		this.nutzerliste.addMouseListener(new MouseAdapter(){
 			@Override 
