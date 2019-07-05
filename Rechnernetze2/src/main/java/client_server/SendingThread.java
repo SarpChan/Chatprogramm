@@ -15,18 +15,16 @@ public class SendingThread extends Thread {
 	private byte[] ok;
 	private DatagramSocket clientSocket = null;
 	private InetAddress IPAddress = null;
-	private BufferedReader inFromUser = new BufferedReader(new InputStreamReader(System.in));
-	private String sentence = "";
 	private DatagramPacket sendPacket;
 	private Client client;
 	private int chatPort;
 	
 	
-	public SendingThread(Client client, String chatHost, int chatPort) {
+	public SendingThread(Client client, String chatHost, int chatPort, byte [] ok) {
 		super();
 		this.client = client;
 		this.chatPort = chatPort;
-		ok = client.hexStringToByteArray("0000004F004B0000");
+		this.ok = ok;
 		try {
 			clientSocket = new DatagramSocket();
 			IPAddress = InetAddress.getByName(chatHost);
@@ -45,34 +43,39 @@ public class SendingThread extends Thread {
 				clientSocket.setSoTimeout(0);
 
 				if(client.isReceived()) { 
-					System.out.println("SENDING OK");
-					client.setReceived(false);
 					sendPacket = new DatagramPacket(ok, ok.length, IPAddress, chatPort);
 					clientSocket.send(sendPacket);
-				} else {
-					sentence = inFromUser.readLine();
-					sendData = sentence.getBytes();
-
-					client.getMsg().addMessage(client.getBenutzername(), sentence);
-					client.setSent(false);
-
-					for(int i = 0; i < 4; i++) {
-						sendPacket = new DatagramPacket(sendData, sendData.length, IPAddress, chatPort);
-						System.out.println("SENDING: " + sentence);
-						clientSocket.send(sendPacket);
-						
-						if(client.isSent())
-							break;
-						try {
-							sleep(2000);
-						} catch (InterruptedException e) {
-							e.printStackTrace();
-						}
-					}
-				}
+					client.setReceived(false);
+					System.out.println("SENDING OK");
+				} 
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
+		}
+	}
+	
+	public void send(String text) {
+		sendData = text.getBytes();
+
+		client.getMsg().addMessage(client.getBenutzername(), text);
+
+		for(int i = 0; i < 4; i++) {
+			client.setSent(false);
+			sendPacket = new DatagramPacket(sendData, sendData.length, IPAddress, chatPort);
+			System.out.println("SENDING: " + text);
+			try {
+				clientSocket.send(sendPacket);
+			} catch (IOException e1) {
+				e1.printStackTrace();
+			}
+			try {
+				sleep(2000);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+			if(client.isSent())
+				break;
+			
 		}
 	}
 

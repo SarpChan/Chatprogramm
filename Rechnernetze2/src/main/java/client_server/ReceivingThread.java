@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.SocketException;
+import java.util.Arrays;
 
 public class ReceivingThread extends Thread {
 
@@ -13,11 +14,11 @@ public class ReceivingThread extends Thread {
 	private String chatpartner;
 	private Client client;
 	
-	public ReceivingThread(Client client, int meinPort, String chatpartner) {
+	public ReceivingThread(Client client, int meinPort, String chatpartner, byte [] ok) {
 		super();
 		this.chatpartner = chatpartner;
 		this.client = client;
-		ok = client.hexStringToByteArray("0000004F004B0000");
+		this.ok = ok;
 		try {
 			clientSocket = new DatagramSocket(meinPort);
 		} catch (SocketException e1) {
@@ -35,16 +36,15 @@ public class ReceivingThread extends Thread {
 				clientSocket.receive(receivePacket);
 			} catch (IOException e) {
 				e.printStackTrace();
-			}        
-			String modifiedSentence = new String(receivePacket.getData());        
-			System.out.println("FROM CHATPARTNER: " + modifiedSentence); 
-			if(receivePacket.getData() != ok) {
-				client.getMsg().addMessage(chatpartner, modifiedSentence);
-				client.setReceived(true);
-				System.out.println("RECEIVED MESSAGE");
-			} else {
-				System.out.println("RECEIVED OK");
+			}  
+			if(Arrays.equals(receivePacket.getData(), ok)) {
 				client.setSent(true);
+				System.out.println("RECEIVED OK");
+			} else {
+				client.setReceived(true);
+				String modifiedSentence = new String(receivePacket.getData());        
+				System.out.println("FROM CHATPARTNER: " + modifiedSentence); 
+				client.getMsg().addMessage(chatpartner, modifiedSentence);
 			}
 		}
 	}
