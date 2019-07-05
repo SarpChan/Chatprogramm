@@ -14,8 +14,9 @@ public class MessageListe {
     @Expose
     private String user, otherUser;
 
-    public MessageListe(){
-        
+    public MessageListe(String user, String otherUser){
+        this.user = user;
+        this.otherUser = otherUser;
     }
 
     

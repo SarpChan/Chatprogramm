@@ -33,6 +33,7 @@ public class Client {
 	private BooVariable loggedIn = new BooVariable(false);
 	private BooVariable chatanfrage = new BooVariable(false);
 	private Map<String, MessageListe> nachrichten = new HashMap<>();
+	private boolean received = true;
 
 
 	public class ServerThread extends Thread {
@@ -170,22 +171,29 @@ public class Client {
 		int meinPort = Integer.parseInt(data[3]);
 		String chatHost = data[2];
 
+		byte[] ok = hexStringToByteArray("0000004F004B0000");
+
+		String chatpartner = data[4];
+		MessageListe msg;
+
+		loadChats();
+		if(nachrichten.containsKey(benutzername + chatpartner))
+			msg = nachrichten.get(benutzername + chatpartner);
+		else {
+			msg = new MessageListe(benutzername, chatpartner);
+			nachrichten.put(benutzername + chatpartner, msg);
+		}	
+
 		receivingThread = new Thread() {
 			byte[] receiveData = new byte[1024];
 			DatagramSocket clientSocket = null;
-			DatagramSocket recSocket = null;
-			InetAddress IPAddress = null;
 
 			@Override
 			public void run() {
 				try {
 					clientSocket = new DatagramSocket(meinPort);
-					recSocket = new DatagramSocket();
-					IPAddress = InetAddress.getByName(chatHost);
 				} catch (SocketException e1) {
 					e1.printStackTrace();
-				} catch (UnknownHostException e) {
-					e.printStackTrace();
 				}
 				while(true) {
 					receiveData = new byte[1024];
@@ -197,6 +205,10 @@ public class Client {
 					}        
 					String modifiedSentence = new String(receivePacket.getData());        
 					System.out.println("FROM CHATPARTNER: " + modifiedSentence); 
+					if(receivePacket.getData() != ok)
+						msg.addMessage(chatpartner, modifiedSentence);
+					else
+						received = true;
 				}
 			}
 		};
@@ -205,16 +217,13 @@ public class Client {
 		sendingThread = new Thread() {
 			byte[] sendData = new byte[1024];
 			DatagramSocket clientSocket = null;
-			DatagramSocket recSocket = null;
 			InetAddress IPAddress = null;
 
 			@Override
 			public void run() {
 				try {
 					clientSocket = new DatagramSocket();
-					recSocket = new DatagramSocket();
 					IPAddress = InetAddress.getByName(chatHost);
-					recSocket.setSoTimeout(2000);
 				} catch (SocketException e) {
 					e.printStackTrace();
 				} catch (UnknownHostException e) {
@@ -224,11 +233,25 @@ public class Client {
 				String sentence = "";
 				while(true) {
 					try {
+						clientSocket.setSoTimeout(0);
 						sentence = inFromUser.readLine();
 						sendData = sentence.getBytes();
-						DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, IPAddress, chatPort);
-						System.out.println("SENDING: " + sentence);
-						clientSocket.send(sendPacket);
+						if(sendData != ok) {
+							msg.addMessage(benutzername, sentence);
+							received = false;
+						} 
+						for(int i = 0; i < 4; i++) {
+							DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, IPAddress, chatPort);
+							System.out.println("SENDING: " + sentence);
+							clientSocket.send(sendPacket);
+							if(received)
+								break;
+							try {
+								sleep(2000);
+							} catch (InterruptedException e) {
+								e.printStackTrace();
+							}
+						}
 					} catch (IOException e) {
 						e.printStackTrace();
 					}
@@ -242,6 +265,7 @@ public class Client {
 	public void endUdpConnection(Socket clientSocket) {
 		sendingThread.interrupt();
 		receivingThread.interrupt();
+		saveChats();
 	}
 
 
@@ -260,6 +284,17 @@ public class Client {
 
 	public void schliessen(){
 		sendText("6 ");
+	}
+
+
+	public byte[] hexStringToByteArray(String s) {
+		int len = s.length();
+		byte[] data = new byte[len / 2];
+		for (int i = 0; i < len; i += 2) {
+			data[i / 2] = (byte) ((Character.digit(s.charAt(i), 16) << 4)
+					+ Character.digit(s.charAt(i + 1), 16));
+		}
+		return data;
 	}
 
 
@@ -310,15 +345,13 @@ public class Client {
 			try {
 				gson.toJson(x, new FileWriter("../resources/" + x.getUser() + x.getOtherUser() + ".json"));
 			} catch (JsonIOException e) {
-
 				e.printStackTrace();
 			} catch (IOException e) {
-
 				e.printStackTrace();
 			}
-
 		}
 	}
+
 
 	public void loadChats() {
 
@@ -335,20 +368,15 @@ public class Client {
 						MessageListe list = gson.fromJson(new FileReader(fileEntry), MessageListe.class);
 						this.nachrichten.put(list.getUser() + list.getOtherUser(), list);
 					} catch (JsonSyntaxException e) {
-						// TODO Auto-generated catch block
 						e.printStackTrace();
 					} catch (JsonIOException e) {
-						// TODO Auto-generated catch block
 						e.printStackTrace();
 					} catch (FileNotFoundException e) {
-						// TODO Auto-generated catch block
 						e.printStackTrace();
 					}
-
 				}
 			}
 		}
-
 	}
 
 

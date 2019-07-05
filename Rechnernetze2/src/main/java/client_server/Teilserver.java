@@ -195,10 +195,10 @@ public class Teilserver {
 				try {
 					BufferedWriter chatPartnerWriter = new BufferedWriter(new OutputStreamWriter(chatPartnerSocket.getOutputStream()));
 
-					chatPartnerWriter.write("2 " + socket.getPort() + " " + socket.getInetAddress().getHostAddress() + " " + chatPort + " \n");
+					chatPartnerWriter.write("2 " + socket.getPort() + " " + socket.getInetAddress().getHostAddress() + " " + chatPort + " " + line[1] + " \n");
 					chatPartnerWriter.flush();
 
-					writer.write("2 " + chatPort + " " + chatIp.getHostAddress() + " " + socket.getPort() + " \n");
+					writer.write("2 " + chatPort + " " + chatIp.getHostAddress() + " " + socket.getPort() + " " + user + " \n");
 					writer.flush();
 				} catch (IOException e1) {
 					e1.printStackTrace();
