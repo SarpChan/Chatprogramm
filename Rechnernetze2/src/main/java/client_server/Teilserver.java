@@ -118,14 +118,17 @@ public class Teilserver {
 		final StringBuffer passwort = new StringBuffer(reverse).reverse();
 
 		if(!nutzerverw.compareUser(benutzername)) {
-			nutzerverw.addUser(benutzername, passwort.toString());
-			nutzerverw.addActiveUser(benutzername, socket);
+			
 
 			try {
 				writer.write("0 200 \n");
+				writer.flush();
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
+
+			nutzerverw.addUser(benutzername, passwort.toString());
+			nutzerverw.addActiveUser(benutzername, socket);
 		} else {
 			try {
 				writer.write("Nutzername bereits vergeben \n");
@@ -147,21 +150,26 @@ public class Teilserver {
 				if(nutzerverw.comparePass(benutzername, passwort.toString())) {
 					if(!nutzerverw.isUserActive(benutzername)) {
 						System.out.println("Eingeloggt");
-						nutzerverw.addActiveUser(benutzername, socket);
+						
 						writer.write("1 200 \n");
+						writer.flush();
+						nutzerverw.addActiveUser(benutzername, socket);
 					} else {
 						System.out.println("Schon eingeloggt ");
 						writer.write("Schon eingeloggt \n");	
+						writer.flush();
 					}
 				} else {
 					System.out.println("Passwort falsch ");
 					writer.write("Passwort falsch \n");
+					writer.flush();
 				}
 			} else {
 				System.out.println("Nutzer nicht vorhanden");
 				writer.write("Nutzer nicht vorhanden \n");
+				writer.flush();
 			}
-			writer.flush();
+			
 		} catch (IOException e){
 			e.printStackTrace();
 		}
