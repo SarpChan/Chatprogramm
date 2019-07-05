@@ -2,6 +2,7 @@ import sys
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
+from tcp_client import ClientPy
 #import Chatprogramm.Rechnernetze2.src.main.py.tcp_client
 #from Chatprogramm.Chatprogramm.Rechnernetze2.src.main.py.tcp_client import UpdatedListeEvent
 
@@ -118,7 +119,9 @@ class Fenster(QWidget):
 
 
         ### Uebergreifend
-
+        
+       
+        
         self.chatBack.clicked.connect(self.back)
         self.chatTop.addStretch()
         self.chatTop.addWidget(self.chatBack)
@@ -188,6 +191,9 @@ class Fenster(QWidget):
 
         self.username.text()
         self.password.text()
+        
+        c.login(self.username.text(), self.password.text(), "1")
+        
 
         self.switchView("Nutzer")
 
@@ -197,11 +203,15 @@ class Fenster(QWidget):
         self.username.text()
         self.password.text()
         self.switchView("Chat")
+        
+        c.login(self.username.text(), self.password.text(), "0")
 
     def refillNutzerliste(self, liste):
         #Nutzerliste neu befuellen
         self.nutzerliste.clear()
+        liste = c.nutzerliste
         self.nutzerliste.addItems(liste)
+        
 
     def refillChat(self, liste):
         self.chatliste.clear()
@@ -248,20 +258,17 @@ class Fenster(QWidget):
 
     def abmelden(self):
         #TODO Client abmelden
-
+        print("test")
+        c.closeConnection()
         self.switchView("Login")
 
-
-
-
-
-
-app = QApplication(sys.argv)
-
-
-w = Fenster()
-
-
-sys.exit(app.exec_())
+def main():
+    app = QApplication(sys.argv)
+    w = Fenster()
+    sys.exit(app.exec_())
+    c = ClientPy()
+if __name__== "__main__":
+    main()
+    
 
 
