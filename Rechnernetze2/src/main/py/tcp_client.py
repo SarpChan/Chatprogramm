@@ -25,7 +25,7 @@ class registOKEvent(QObject):
 
 class ClientPy:
     def __init__(self):
-
+        self.anfrageliste = []
         self.nutzerliste = []
         #Server TCP Verbindung
         self.socket = socket(AF_INET, SOCK_STREAM)
@@ -86,10 +86,11 @@ class ClientPy:
         
     def answerUdpConnection(self, bool):
         print("hallo")
-        #if(bool):
-            #sendText("8 " + chatanfrage.getVon());
-        #else:
-            #sendText("9 " + chatanfrage.getVon());
+        if(bool):
+            sendText("8 " + anfrageliste[-1]);
+        else:
+            sendText("9 " + anfrageliste[-1]);
+        
     
     def buildUdpConnection(self, line):
         chatPort = int(line.split(" ")[1])
@@ -125,7 +126,9 @@ class ClientPy:
             
             ''' Chatanfrage bekommen'''
             if antwort.split(" ")[0] == "5":
+                
                 print("Chat anfrage von " + antwort.split(" ")[1])
+                anfrageliste.put(antwort.split(" ")[1])
             
                 ''' erfolgreiches einloggen/ registrieren '''
             elif antwort.split(" ")[0] == "1" or antwort.split(" ")[0] == "0" : 
