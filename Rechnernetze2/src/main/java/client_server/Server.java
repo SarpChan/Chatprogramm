@@ -30,8 +30,7 @@ public class Server
 			{
 				try
 				{
-					final Socket socket = serverSocket.accept();
-										
+					final Socket socket = serverSocket.accept();					
 
 					final Thread thread = new Thread(new Runnable()
 					{
