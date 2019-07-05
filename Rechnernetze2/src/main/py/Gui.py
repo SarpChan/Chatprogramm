@@ -165,7 +165,7 @@ class Fenster(QWidget):
         self.nutzerView.setLayout(self.nBox)
 
         self.nutzerliste.setSelectionMode(QAbstractItemView.SingleSelection)
-        self.nutzerliste.itemClicked.connect(self.chatAnfrage)
+        self.nutzerliste.itemClicked.connect(self.chatWith)
         #self.nutzerliste.itemSelectionChanged(self.chatView)
 
         dispatcher.connect(self.switchToHome, signal = "logErfolg", sender= dispatcher.Any)
@@ -173,9 +173,9 @@ class Fenster(QWidget):
         dispatcher.connect(self.switchToLogin, signal = "logout", sender= dispatcher.Any)
         dispatcher.connect(self.refillNutzerliste, signal = "refillNutzer", sender= dispatcher.Any)
         dispatcher.connect(self.refillChat, signal = "refillChat", sender= dispatcher.Any)
+        dispatcher.connect(self.showChatAnfrage, signal = "neueChatAnfrage", sender= dispatcher.Any)
 
-    def chatAnfrage(self, item):
-        self.c.requestUdpConnection(item.text())
+
 
 
     def textFeldChanged(self):
@@ -198,7 +198,7 @@ class Fenster(QWidget):
         #Nachricht absenden
         #TODO Nachricht an Client senden
         message = self.textFeld.toPlainText()
-        #TODO message objekt erstellen mit LocalDateTime, sender, text
+
         self.addToChat(self.c.benutzername +" : " + message);
         self.textFeld.clear()
 
@@ -228,9 +228,21 @@ class Fenster(QWidget):
     def addToChat(self, text):
         self.chatliste.addItem(text)
 
-    def chatWith(self):
-        print("hallo")
-        #TODO Client Chatanfrage an chatPartner
+    def chatWith(self, item):
+        self.c.requestUdpConnection(item.text())
+
+    def showChatAnfrage(self, anfrager):
+
+
+
+        msg = QMessageBox()
+
+        msg.setText("Neue Chatanfrage von" + anfrager)
+        msg.setWindowTitle("Chatanfrage")
+        msg.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
+        retval = msg.exec_()
+        print(retval)
+
 
 
     def back(self):

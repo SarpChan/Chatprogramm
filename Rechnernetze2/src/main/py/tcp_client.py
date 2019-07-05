@@ -37,7 +37,7 @@ class ClientPy:
         self.chatAufgebaut = 'chatErfolg'
         self.ausgeloggt = 'logout'
         self.refillNutzer = 'refillNutzer'
-        
+        self.neueChatAnfrage = 'neueChatAnfrage'
         t = threading.Thread(target = self.processReceived)
         t.start()
         
@@ -87,9 +87,9 @@ class ClientPy:
     def answerUdpConnection(self, bool):
         print("hallo")
         if(bool):
-            sendText("8 " + anfrageliste[-1]);
+            self.sendText("8 " + self.anfrageliste[-1]);
         else:
-            sendText("9 " + anfrageliste[-1]);
+            self.sendText("9 " + self.anfrageliste[-1]);
         
     
     def buildUdpConnection(self, line):
@@ -130,7 +130,9 @@ class ClientPy:
             if antwort.split(" ")[0] == "5":
                 
                 print("Chat anfrage von " + antwort.split(" ")[1])
-                anfrageliste.put(antwort.split(" ")[1])
+                self.anfrageliste.append(antwort.split(" ")[1])
+                dispatcher.send(signal = self.neueChatAnfrage, sender = dispatcher.Any, anfrager = antwort.split(" ")[1])
+
             
                 ''' erfolgreiches einloggen/ registrieren '''
             elif antwort.split(" ")[0] == "1" or antwort.split(" ")[0] == "0" : 
