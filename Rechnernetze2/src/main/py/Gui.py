@@ -8,7 +8,6 @@ from Chatprogramm.Rechnernetze2.src.main.py.tcp_client import ClientPy, registOK
 #from Chatprogramm.Chatprogramm.Rechnernetze2.src.main.py.tcp_client import UpdatedListeEvent
 
 
-
 class Fenster(QWidget):
     def __init__(self):
         super().__init__()
@@ -27,6 +26,7 @@ class Fenster(QWidget):
         self.loginView = QWidget()
         self.chatView = QWidget()
         self.nutzerView = QWidget()
+        self.dialogView = QWidget()
         self.lBox = QVBoxLayout()
         self.nBox = QVBoxLayout()
         self.cBox = QVBoxLayout()
@@ -35,6 +35,11 @@ class Fenster(QWidget):
         self.disposeWidget = QWidget()
         self.stacked = QStackedWidget()
         self.mainlayout = QVBoxLayout()
+        self.diaText = QLabel()
+        self.accept = QPushButton("acccept")
+        self.refuse = QPushButton("refuse")
+        self.accRef = QHBoxLayout()
+        self.diaBox = QVBoxLayout()
 
         self.user = QLabel("username")
         self.username = QLineEdit()
@@ -61,12 +66,28 @@ class Fenster(QWidget):
 
     def initMe(self):
 
+        ### DIALOG
+
+        self.accRef.addStretch()
+        self.accRef.addWidget(self.accept)
+        self.accRef.addWidget(self.refuse)
+        self.accRef.addStretch()
+
+        self.diaBox.addStretch()
+        self.diaBox.addWidget(self.diaText)
+        self.diaBox.addLayout(self.accRef)
+        self.diaBox.addStretch()
+
+        self.accept.clicked.connect(self.akzeptiere)
+        self.refuse.clicked.connect(self.ablehnen)
+
+        self.dialogView.setLayout(self.diaBox)
+
         #### LOGIN FENSTER
 
         #self.sig.updatedEvent.connect(self.updateListView)
 
         self.login.move(120, 400)
-        self.login.setToolTip('this is my Button')
         self.login.clicked.connect(self.einloggen)
         self.login.setDisabled(True)
         self.register.move(200, 400)
@@ -107,6 +128,7 @@ class Fenster(QWidget):
         self.stacked.addWidget(self.loginView)
         self.stacked.addWidget(self.chatView)
         self.stacked.addWidget(self.nutzerView)
+        self.stacked.addWidget(self.dialogView)
 
         self.mainlayout.addWidget(self.stacked)
         self.stacked.setCurrentIndex(1)
@@ -116,6 +138,7 @@ class Fenster(QWidget):
 
 
         print(self.stacked.currentWidget())
+
         self.setGeometry(0, 0, 400, 600)
         self.setWindowTitle("Chatprogramm")
         self.setFixedSize(400, 600)
@@ -173,10 +196,16 @@ class Fenster(QWidget):
         dispatcher.connect(self.switchToLogin, signal = "logout", sender= dispatcher.Any)
         dispatcher.connect(self.refillNutzerliste, signal = "refillNutzer", sender= dispatcher.Any)
         dispatcher.connect(self.refillChat, signal = "refillChat", sender= dispatcher.Any)
-        dispatcher.connect(self.showChatAnfrage, signal = "neueChatAnfrage", sender= dispatcher.Any)
+        dispatcher.connect(self.switchToDialog, signal = "neueChatAnfrage", sender= dispatcher.Any)
+        dispatcher.connect(self.neueNachricht, signal = "neueNachricht", sender = dispatcher.Any)
 
+    def neueNachricht(self, message, user ):
+        self.chatliste.addItem(user + " : " + message)
 
-
+    def akzeptiere(self):
+        self.c.answerUdpConnection(True)
+    def ablehnen(self):
+        self.c.answerUdpConnection(False)
 
     def textFeldChanged(self):
         #absenden Button aktivieren?
@@ -196,9 +225,9 @@ class Fenster(QWidget):
 
     def absenden(self):
         #Nachricht absenden
-        #TODO Nachricht an Client senden
-        message = self.textFeld.toPlainText()
 
+        message = self.textFeld.toPlainText()
+        self.c.send(message)
         self.addToChat(self.c.benutzername +" : " + message);
         self.textFeld.clear()
 
@@ -233,15 +262,10 @@ class Fenster(QWidget):
 
     def showChatAnfrage(self, anfrager):
 
+        self.diaText = "Neue Chatanfrage von" + anfrager
 
+        self.dialog.show()
 
-        msg = QMessageBox()
-
-        msg.setText("Neue Chatanfrage von" + anfrager)
-        msg.setWindowTitle("Chatanfrage")
-        msg.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
-        retval = msg.exec_()
-        print(retval)
 
 
 
@@ -275,6 +299,11 @@ class Fenster(QWidget):
         self.currentView = self.loginView
         self.stacked.setCurrentIndex(0)
         self.show()
+
+    def switchToDialog(self, anfrager):
+        self.diaText.setText("Neue Anfrage von " + anfrager)
+        self.stacked.setCurrentIndex(3)
+        self.show
 
 
     def abmelden(self):

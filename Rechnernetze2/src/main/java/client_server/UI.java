@@ -94,6 +94,8 @@ public class UI extends JFrame {
 		this.nachrichten = new CustomJList<>(chatModel);
 		this.nachrichten.setCellRenderer(new messageCellRenderer());
 		this.chatFenster = new JScrollPane(this.nachrichten);
+		this.chatFenster.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+		this.chatFenster.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
 		this.chatFensterPanel = new JPanel();
 
 
@@ -471,6 +473,7 @@ public class UI extends JFrame {
 				this.textArea.setEditable(false);
 
 				this.areaScrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
+				
 				this.areaScrollPane.setPreferredSize(new Dimension(250,80));
 
 				this.textArea.setWrapStyleWord(true);
