@@ -31,9 +31,8 @@ class ClientPy:
         self.sendeTreads = []
         self.chatEmpfangenThreads = []
         
-        self.udpIP = ""
-        self.udpPort = ""
-        self.clientSocket = ""
+        self.nachrichtZuChatListe = []
+     
         #Server TCP Verbindung
         self.socket = socket(AF_INET, SOCK_STREAM)
         self.socket.connect((serverName,serverPort))
@@ -52,12 +51,8 @@ class ClientPy:
     def sendText(self,text):
         print("Sende an Server " + text)
         text = text + " \n"
-      
         self.socket.send(text.encode())
-        #antwort = self.socket.recv(1024)
-        #print("Vom Server empfangen: " + str(antwort))
-            
-        #return str(antwort)
+       
         
     # 0 = Registrieren  1 = Login
     def login(self,username, password, option):
@@ -101,39 +96,72 @@ class ClientPy:
         
     
     def buildUdpConnection(self, line):
-        chatPort = int(line.split(" ")[1])
-        chatHostAdresse = line.split(" ")[2]
-        meinPort = int(line.split(" ")[3])
+        self.udpIP = chatPort = int(line.split(" ")[3])
+        self.udpPort = chatHostAdresse = line.split(" ")[2]
+        self.meinPort = int(line.split(" ")[1])
+        self.chatPartner = line.split(" ")[4]
+        self.ok = ("0000004F004B0000").encode()
         
-        chatPartner = line.split(" ")[4]
+        self.received = False
+        self.setSend = True
         
         #neuer Sochet fuer UDP ?
         self.clientSocket = socket(AF_INET, SOCK_DGRAM)
+        self.clientSocket.bind((("127.0.0.1"), int(self.meinPort)))
+        
+        self.clientSocketSenden = socket(AF_INET, SOCK_DGRAM)
+        
         chatEmpfangenThread = threading.Thread(target = self.chatEmpfangen)
         #sendThread = threading.Thread(target = self.chatSenden, args=(chatHostAdresse, chatPort, clientSocket))
         chatEmpfangenThread.start()
         #sendThread.start()
-        
         #self.sendeTreads.append([clientSocket, sendThread])
         self.chatEmpfangenThreads.append([self.clientSocket, chatEmpfangenThread])
-        
+        threadsendBestaetigung = threading.Thread(target = self.sendBestaetigung)
+        threadsendBestaetigung.start()
+    
+    def sendBestaetigung(self):
+        while True:
+            if self.received: 
+                    self.send(self.ok)
+                    self.received = False
+                    print("SENDING OK")
+       
     def chatEmpfangen(self):
+
         while(True):
-            modifiedMessage, serverAddress = self.clientSocket.recvfrom(2048)
-            print(modifiedMessage)
+            modifiedMessage, data = self.clientSocket.recvfrom(2048)
+            if(modifiedMessage == self.ok):
+                self.setSend = True
+                print("RECEIVED OK")
+            else:
+                self.received = True
+                print("FROM CHATPARTNER: " + modifiedMessage.decode())
+               
+                
+            print("message empfangen: " , modifiedMessage , data)
             #self.nachrichtZuChatListe(user + sender, message, sender)
+            #self.nachrichtZuChatListe(self.benutzername + modifiedMessage.split("'")[0], modifiedMessage.split("'")[1], modifiedMessage.split("'")[0])
             
-    '''def chatSenden(self, udpIP, udpPort,clientSocket):
-        wh chatSenden(self, udpIP, udpPort,clientSocket):
-        while(True):
-            message = bytes(input("Chat sentence you: "), 'utf-8')
-            clientSocket.sendto(MESSAGE, (udpIP, udpPort))'''
-
-
-
-            
+    
+       
     def send(self, message):
-        self.clientSocket.sendto(message, (self.udpIP, self.udpPort))
+        print("senden:",message, self.udpIP,self.udpPort)
+        
+        if message != self.ok:
+            message  = message + " \n"
+  
+        for i in range(4):
+            self.setSend = False
+            if message != self.ok:
+                self.clientSocketSenden.sendto(message.encode(), (str(self.udpPort), int(self.udpIP)))
+            else:
+                self.clientSocketSenden.sendto(message, (str(self.udpPort), int(self.udpIP)))
+            if self.setSend:
+                break
+        
+        
+        
         
     
     def endUdpConnection(self):
