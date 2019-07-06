@@ -38,7 +38,7 @@ public class SendingThread extends Thread {
 	@Override
 	public void run() {
 		
-		while(true) {
+		while(true && !clientSocket.isClosed()) {
 			try {
 				clientSocket.setSoTimeout(0);
 
@@ -78,5 +78,10 @@ public class SendingThread extends Thread {
 			
 		}
 	}
+	
+	public void closeSocket() {
+		clientSocket.close();
+	}
+
 
 }

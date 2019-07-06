@@ -29,7 +29,7 @@ public class ReceivingThread extends Thread {
 	@Override
 	public void run() {
 		
-		while(true) {
+		while(true && !clientSocket.isClosed()) {
 			receiveData = new byte[1024];
 			DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);        
 			try {
@@ -48,5 +48,10 @@ public class ReceivingThread extends Thread {
 			}
 		}
 	}
+	
+	public void closeSocket() {
+		clientSocket.close();
+	}
+
 
 }

@@ -73,7 +73,7 @@ public class UI extends JFrame {
 	public UI(Client cl) {
 		super(gc);
 		this.client = cl;
-		
+
 		setLayout(new BorderLayout());
 		this.anfragender = "";
 		this.centerDim = new Dimension(400, 450);
@@ -84,7 +84,7 @@ public class UI extends JFrame {
 		this.areaScrollPane = new JScrollPane(this.textArea);
 		this.registrierPanel = new JPanel();
 		this.nutzerModel = new DefaultListModel<>();
-		
+
 
 		this.nutzerliste = new CustomJList<>(nutzerModel);
 		this.nutzerAnzeige = new JScrollPane(this.nutzerliste);
@@ -109,9 +109,9 @@ public class UI extends JFrame {
 				nachrichten.setFixedCellHeight(10);
 				nachrichten.setFixedCellHeight(-1);
 			}
-	
+
 		};
-	
+
 		nachrichten.addComponentListener(l);
 
 		this.nutzerliste.addMouseListener(new MouseAdapter(){
@@ -224,9 +224,8 @@ public class UI extends JFrame {
 		this.topPanel.add(this.abmelden);
 		this.back.setAlignmentX(Component.LEFT_ALIGNMENT);
 		this.abmelden.setAlignmentX(Component.RIGHT_ALIGNMENT);
-		
-		
-		
+
+
 
 		this.registrierPanel.add(Box.createVerticalGlue());
 		this.registrierPanel.add(this.user);
@@ -235,12 +234,12 @@ public class UI extends JFrame {
 		this.registrierPanel.add(Box.createVerticalGlue());
 
 
-		
-		
-		
+
+
+
 
 		this.alles = alles;
-		
+
 
 
 		this.username.getDocument().addDocumentListener(new DocumentListener() {
@@ -331,18 +330,15 @@ public class UI extends JFrame {
 			}
 		});
 
-		
 
 		this.anmelden.addActionListener(new ActionListener() {
 
 			@Override
 			public void actionPerformed(ActionEvent e) {
-
 				client.login(username.getText(), password.getText(), "1");
 
 				if(client.isLoggedIn()) {
-					switchView(Views.HOME);
-					
+					switchView(Views.HOME);	
 				}
 				return;
 			}
@@ -353,8 +349,8 @@ public class UI extends JFrame {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				String text = textArea.getText();
+				textArea.setText("");
 				client.getSendingThread().send(text);
-				
 				return;
 			}
 		});
@@ -363,6 +359,11 @@ public class UI extends JFrame {
 
 			@Override
 			public void actionPerformed(ActionEvent e) {
+				if(client.hasChatanfrage()) {
+					String name = client.getChatanfrage().getVon();
+					client.sendEndUdpConnection(name);
+					client.endUdpConnection();
+				}
 				client.close();
 				switchView(Views.LOGIN);
 				return;
@@ -374,42 +375,44 @@ public class UI extends JFrame {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				client.login(username.getText(), password.getText(), "0");
-				
-				
 				return;
 			}
 		});
+
 		this.back.addActionListener(new ActionListener(){
-			
+
 			@Override
 			public void actionPerformed(ActionEvent e){
-				
-				if(lastView != Views.LOGIN){
+				if (currentView == Views.CHAT) {
+					String name = client.getChatpartnerName();
+					client.sendEndUdpConnection(name);
+					client.endUdpConnection();
+				}
+				if(lastView != Views.LOGIN ){
 					switchView(lastView);
 				}
-
 			}
 		});
 
 		this.client.getLoggedIn().setListener(new BooVariable.ChangeListener(){
-		
+
 			@Override
 			public void onChange() {
 				if(client.isLoggedIn()){
 					switchView(Views.HOME);
+					chatModel.clear();
 				}
 			}
 		});
 
 		this.client.getObservableString().setListener(new ObservableString.ChangeListener(){
-		
+
 			@Override
 			public void onChange() {
-				
 				client.removeMessageListeners();
 
 				client.getActMessageListe().setListener(new MessageListe.ChangeListener(){
-				
+
 					@Override
 					public void onChange() {
 						chatModel.clear();
@@ -421,91 +424,87 @@ public class UI extends JFrame {
 				chatModel.clear();
 				for (Message ele : client.getActMessageListe().getListe()) {
 					chatModel.addElement(ele);
-					}
+				}
 				switchView(Views.CHAT);
-				
 			}
 		});
 
-        this.client.getChatanfrage().setListener(new BooVariable.ChangeListener(){
+		this.client.getChatanfrage().setListener(new BooVariable.ChangeListener(){
 
-			
-        
-            @Override
-            public synchronized void onChange() {
-                if(client.hasChatanfrage()){
-                    SwingUtilities.invokeLater(new Runnable()
-                    {
-                        public void run(){
-							
-							
-							
+			@Override
+			public synchronized void onChange() {
+				if(client.hasChatanfrage()) {
+					SwingUtilities.invokeLater(new Runnable()
+					{
+						public void run(){
+
 							JOptionPane optionPane = new JOptionPane();
-							
-							dialog.add( new JDialog(alles, 
-							"Click a button",
-							true));
+
+							dialog.add( new JDialog(alles, "Click a button", true));
 							int temp = dialog.size()-1;
-							
 
 							optionPane.setBounds(getLocationOnScreen().x, getLocationOnScreen().y + 200, 400, 150);
-							
+
 							int auswahl = optionPane.showOptionDialog(alles, "Sie haben eine neue Chatanfrage von " + client.getChatanfrage().getVon(), 
-							"Chatanfrage",optionPane.YES_NO_OPTION , optionPane.QUESTION_MESSAGE, null, null, 1);
+									"Chatanfrage",optionPane.YES_NO_OPTION , optionPane.QUESTION_MESSAGE, null, null, 1);
 							if (auswahl == 0){
+								if(client.getSendingThread() != null && !client.getSendingThread().isInterrupted()) {
+									String name = client.getChatpartnerName();
+									client.sendEndUdpConnection(name);
+									client.endUdpConnection();
+								}
 								client.answerUdpConnection(true);
 							} else {
+								if(client.getChatpartnerName() != null)
+									client.getChatanfrage().setVon(client.getChatpartnerName());
 								client.answerUdpConnection(false);
 							}
-
-							
-							
-							
-                        }
-                    });
-                }
-                
-            }
-        });
-		
-
-
-				// SouthPanel
-				this.textArea.setEditable(false);
-
-				this.areaScrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
-				
-				this.areaScrollPane.setPreferredSize(new Dimension(250,80));
-
-				this.textArea.setWrapStyleWord(true);
-				this.textArea.setLineWrap(true);
-				this.textArea.setAutoscrolls(true);
-				this.textArea.setMaximumSize(new Dimension(100, 100));
-				this.textArea.setMinimumSize(new Dimension(100,100));
-
-				this.chatEingabePanel.add(this.areaScrollPane);
-				this.chatEingabePanel.add(this.absenden);
-
-				//frame.add(southPanel, BorderLayout.SOUTH);
-
-				this.add(this.registrierPanel, BorderLayout.CENTER);
-
-
-				this.client.getActiveUsers().setListener(new ObservableListe.ChangeListener(){
-		
-					@Override
-					public void onChange() {
-
-						nutzerModel.clear();
-						for (String ele : client.getActiveUsers().getListe()) {
-							nutzerModel.addElement(ele);
 						}
-						
-					}
-				});
+					});
+				} else {
+					switchView(Views.HOME);
+				}
+			}
+		});
 
-				
-		
+
+
+		// SouthPanel
+		this.textArea.setEditable(false);
+
+		this.areaScrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
+
+		this.areaScrollPane.setPreferredSize(new Dimension(250,80));
+
+		this.textArea.setWrapStyleWord(true);
+		this.textArea.setLineWrap(true);
+		this.textArea.setAutoscrolls(true);
+		this.textArea.setMaximumSize(new Dimension(100, 100));
+		this.textArea.setMinimumSize(new Dimension(100,100));
+
+		this.chatEingabePanel.add(this.areaScrollPane);
+		this.chatEingabePanel.add(this.absenden);
+
+		//frame.add(southPanel, BorderLayout.SOUTH);
+
+		this.add(this.registrierPanel, BorderLayout.CENTER);
+
+
+		this.client.getActiveUsers().setListener(new ObservableListe.ChangeListener(){
+
+			@Override
+			public void onChange() {
+
+				nutzerModel.clear();
+				for (String ele : client.getActiveUsers().getListe()) {
+					nutzerModel.addElement(ele);
+				}
+
+			}
+		});
+
+
+
 	}
 
 
@@ -530,7 +529,7 @@ public class UI extends JFrame {
 				} else if (whereTo == Views.HOME) {
 					lastView = currentView;
 					currentView = Views.HOME;
-					
+
 					getContentPane().removeAll();
 					repaint();
 					validate();
@@ -539,7 +538,7 @@ public class UI extends JFrame {
 					add(topPanel, BorderLayout.NORTH);
 					//client.requestActiveUser();
 
-					
+
 
 					validate();                        
 
@@ -560,10 +559,10 @@ public class UI extends JFrame {
 
 					textArea.setEditable(true);
 					absenden.setEnabled(true);
-					
+
 					add(topPanel, BorderLayout.NORTH);
 					add(chatEingabePanel, BorderLayout.SOUTH);
-					
+
 
 					validate();                        
 
@@ -574,7 +573,7 @@ public class UI extends JFrame {
 	}
 
 
-	
+
 
 
 	public void exitProcedure(){

@@ -29,6 +29,7 @@ public class Client {
 	private boolean received = false;
 	private boolean sent = true;
 	private MessageListe msg;
+	private String chatpartnerName;
 	
 
 	public class ServerThread extends Thread {
@@ -91,6 +92,9 @@ public class Client {
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
+		} else if (line.startsWith("10 ")) {
+			chatanfrage.setBoo(false);
+			endUdpConnection();
 		}
 	}
 
@@ -166,27 +170,36 @@ public class Client {
 		int meinPort = Integer.parseInt(data[3]);
 		String chatHost = data[2];
 		byte [] ok = hexStringToByteArray("0000004F004B0000");
-		String chatpartner = data[4];
+		chatpartnerName = data[4];
 
+		System.out.println(benutzername + chatpartnerName);
+		
 		loadChats();
-		if(nachrichten.containsKey(benutzername + chatpartner))
-			setMsg(nachrichten.get(benutzername + chatpartner));
+		if(nachrichten.containsKey(benutzername + chatpartnerName))
+			setMsg(nachrichten.get(benutzername + chatpartnerName));
 		else {
-			setMsg(new MessageListe(benutzername, chatpartner));
-			nachrichten.put(benutzername + chatpartner, getMsg());
+			setMsg(new MessageListe(benutzername, chatpartnerName));
+			nachrichten.put(benutzername + chatpartnerName, getMsg());
 		}	
-		this.chatPartner.setString(benutzername + chatpartner);
+		this.chatPartner.setString(benutzername + chatpartnerName);
 
-		receivingThread = new ReceivingThread(this, meinPort, chatpartner, ok); 
+		receivingThread = new ReceivingThread(this, meinPort, chatpartnerName, ok); 
 		receivingThread.start();
 
 		sendingThread = new SendingThread(this, chatHost, chatPort, ok);
 		sendingThread.start();
 	}
 
+	
+	public void sendEndUdpConnection(String name) {
+		sendText("10 " + name);
+	}
+	
 
-	public void endUdpConnection(Socket clientSocket) {
-		getSendingThread().interrupt();
+	public void endUdpConnection() {
+		sendingThread.closeSocket();
+		receivingThread.closeSocket();
+		sendingThread.interrupt();
 		receivingThread.interrupt();
 		saveChats();
 	}
@@ -266,7 +279,7 @@ public class Client {
 			Gson gson = null;
 			gson = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create();
 			try {
-				gson.toJson(x, new FileWriter("Rechnernetze2/src/main/java/resources" + x.getUser() + x.getOtherUser() + ".json"));
+				gson.toJson(x, new FileWriter("C:\\Users\\Julia\\git\\Chatprogramm\\Rechnernetze2\\src\\main\\java\\resources" + x.getUser() + x.getOtherUser() + ".json"));
 			} catch (JsonIOException e) {
 				e.printStackTrace();
 			} catch (IOException e) {
@@ -278,7 +291,7 @@ public class Client {
 
 	public void loadChats() {
 
-		final File folder = new File("Rechnernetze2/src/main/java/resources");
+		final File folder = new File("C:\\Users\\Julia\\git\\Chatprogramm\\Rechnernetze2\\src\\main\\java\\resources");
 
 		for (final File fileEntry : folder.listFiles()) {
 			if (fileEntry.isDirectory()) {
@@ -351,12 +364,24 @@ public class Client {
 		this.benutzername = benutzername;
 	}
 
+	public ReceivingThread getReceivingThread() {
+		return receivingThread;
+	}
+	
 	public SendingThread getSendingThread() {
 		return sendingThread;
 	}
 
 	public void setSendingThread(SendingThread sendingThread) {
 		this.sendingThread = sendingThread;
+	}
+	
+	public String getChatpartnerName() {
+		return chatpartnerName;
+	}
+
+	public void setChatpartnerName(String chatpartnerName) {
+		this.chatpartnerName = chatpartnerName;
 	}
 
 
