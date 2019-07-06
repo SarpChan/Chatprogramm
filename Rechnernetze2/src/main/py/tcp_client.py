@@ -30,6 +30,7 @@ class ClientPy:
         self.nutzerliste = []
         self.sendeTreads = []
         self.chatEmpfangenThreads = []
+        self.chatListe = {}
         
         self.udpIP = ""
         self.udpPort = ""
@@ -121,7 +122,7 @@ class ClientPy:
         while(True):
             modifiedMessage, serverAddress = self.clientSocket.recvfrom(2048)
             print(modifiedMessage)
-            #self.nachrichtZuChatListe(user + sender, message, sender)
+            #TODO self.nachrichtZuChatListe(self.benutzername + sender, message, sender)
             
     '''def chatSenden(self, udpIP, udpPort,clientSocket):
         wh chatSenden(self, udpIP, udpPort,clientSocket):
@@ -133,8 +134,9 @@ class ClientPy:
 
             
     def send(self, message):
+        #TODO self.chatListe[self.benutzername + chatpartner].append(benutzername " : " + message)
         self.clientSocket.sendto(message, (self.udpIP, self.udpPort))
-        
+
     
     def endUdpConnection(self):
         print("threads beenden")
@@ -150,10 +152,12 @@ class ClientPy:
         self.clientSocket.close()
                 
                 
-    def nachrichtZuChatliste( key,  message, sender):
+    def nachrichtZuChatliste(self, key,  message, sender):
 
-        #TODO ZU Liste hinzu
-        dispatcher.send(signal="neueNachricht", sender = dispatcher.Any, user = sender, message = message )
+
+        if self.chatListe[key]:
+            self.chatListe[key].append(sender + " : " + message)
+        dispatcher.send(signal="neueNachricht", sender = dispatcher.Any, key = key )
 
         
         

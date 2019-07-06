@@ -44,7 +44,7 @@ public class ReceivingThread extends Thread {
 				client.setReceived(true);
 				String modifiedSentence = new String(receivePacket.getData());        
 				System.out.println("FROM CHATPARTNER: " + modifiedSentence); 
-				client.getMsg().addMessage(chatpartner, modifiedSentence);
+				client.getActMessageListe().addMessage(chatpartner, modifiedSentence);
 			}
 		}
 	}

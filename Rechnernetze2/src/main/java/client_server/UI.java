@@ -408,18 +408,18 @@ public class UI extends JFrame {
 				
 				client.removeMessageListeners();
 
-				client.getActMessageListe().setListener(new MessageListe.ChangeListener(){
+				client.getMsg().setListener(new MessageListe.ChangeListener(){
 				
 					@Override
 					public void onChange() {
 						chatModel.clear();
-						for (Message ele : client.getActMessageListe().getListe()) {
+						for (Message ele : client.getMsg().getListe()) {
 							chatModel.addElement(ele);
 						}
 					}
 				});
 				chatModel.clear();
-				for (Message ele : client.getActMessageListe().getListe()) {
+				for (Message ele : client.getMsg().getListe()) {
 					chatModel.addElement(ele);
 					}
 				switchView(Views.CHAT);

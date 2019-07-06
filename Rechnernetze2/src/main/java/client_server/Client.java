@@ -168,7 +168,7 @@ public class Client {
 		byte [] ok = hexStringToByteArray("0000004F004B0000");
 		String chatpartner = data[4];
 
-		loadChats();
+		
 		if(nachrichten.containsKey(benutzername + chatpartner))
 			setMsg(nachrichten.get(benutzername + chatpartner));
 		else {
@@ -188,7 +188,7 @@ public class Client {
 	public void endUdpConnection(Socket clientSocket) {
 		getSendingThread().interrupt();
 		receivingThread.interrupt();
-		saveChats();
+		
 	}
 
 
@@ -259,49 +259,6 @@ public class Client {
 	public final void setChat(boolean chatanfrage) {
 		this.chatanfrage.setBoo(chatanfrage);
 	}
-
-	public void saveChats() {
-		for (MessageListe x : this.nachrichten.values()) {
-
-			Gson gson = null;
-			gson = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create();
-			try {
-				gson.toJson(x, new FileWriter("Rechnernetze2/src/main/java/resources" + x.getUser() + x.getOtherUser() + ".json"));
-			} catch (JsonIOException e) {
-				e.printStackTrace();
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		}
-	}
-
-
-	public void loadChats() {
-
-		final File folder = new File("Rechnernetze2/src/main/java/resources");
-
-		for (final File fileEntry : folder.listFiles()) {
-			if (fileEntry.isDirectory()) {
-				continue;
-			} else {
-				if (fileEntry.getName().endsWith(".json")) {
-					Gson gson = new Gson();
-
-					try {
-						MessageListe list = gson.fromJson(new FileReader(fileEntry), MessageListe.class);
-						this.nachrichten.put(list.getUser() + list.getOtherUser(), list);
-					} catch (JsonSyntaxException e) {
-						e.printStackTrace();
-					} catch (JsonIOException e) {
-						e.printStackTrace();
-					} catch (FileNotFoundException e) {
-						e.printStackTrace();
-					}
-				}
-			}
-		}
-	}
-
 
 	public List<Message> openChat(String key){
 		return this.nachrichten.get(key).getListe() == null? null: this.nachrichten.get(key).getListe();

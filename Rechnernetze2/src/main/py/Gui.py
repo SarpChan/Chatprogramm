@@ -199,8 +199,8 @@ class Fenster(QWidget):
         dispatcher.connect(self.switchToDialog, signal = "neueChatAnfrage", sender= dispatcher.Any)
         dispatcher.connect(self.neueNachricht, signal = "neueNachricht", sender = dispatcher.Any)
 
-    def neueNachricht(self, message, user ):
-        self.chatliste.addItem(user + " : " + message)
+    def neueNachricht(self, key ):
+        self.chatliste = self.c.chatListe[key]
 
     def akzeptiere(self):
         self.c.answerUdpConnection(True)
@@ -228,7 +228,6 @@ class Fenster(QWidget):
 
         message = self.textFeld.toPlainText()
         self.c.send(message)
-        self.addToChat(self.c.benutzername +" : " + message);
         self.textFeld.clear()
 
 
