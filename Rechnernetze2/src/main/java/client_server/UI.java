@@ -332,12 +332,10 @@ public class UI extends JFrame {
 		});
 
 		
-
 		this.anmelden.addActionListener(new ActionListener() {
 
 			@Override
 			public void actionPerformed(ActionEvent e) {
-
 				client.login(username.getText(), password.getText(), "1");
 
 				if(client.isLoggedIn()) {
@@ -362,6 +360,11 @@ public class UI extends JFrame {
 
 			@Override
 			public void actionPerformed(ActionEvent e) {
+				if(client.hasChatanfrage()) {
+					String name = client.getChatanfrage().getVon();
+					client.sendEndUdpConnection(name);
+					client.endUdpConnection();
+				}
 				client.close();
 				switchView(Views.LOGIN);
 				return;
@@ -373,11 +376,10 @@ public class UI extends JFrame {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				client.login(username.getText(), password.getText(), "0");
-				
-				
 				return;
 			}
 		});
+		
 		this.back.addActionListener(new ActionListener(){
 			
 			@Override
@@ -386,7 +388,6 @@ public class UI extends JFrame {
 				if(lastView != Views.LOGIN){
 					switchView(lastView);
 				}
-
 			}
 		});
 
@@ -404,7 +405,6 @@ public class UI extends JFrame {
 		
 			@Override
 			public void onChange() {
-				
 				client.removeMessageListeners();
 
 				client.getActMessageListe().setListener(new MessageListe.ChangeListener(){
@@ -422,31 +422,23 @@ public class UI extends JFrame {
 					chatModel.addElement(ele);
 					}
 				switchView(Views.CHAT);
-				
 			}
 		});
 
         this.client.getChatanfrage().setListener(new BooVariable.ChangeListener(){
-
-			
         
             @Override
             public synchronized void onChange() {
-                if(client.hasChatanfrage()){
+                if(client.hasChatanfrage()) {
                     SwingUtilities.invokeLater(new Runnable()
                     {
                         public void run(){
 							
-							
-							
 							JOptionPane optionPane = new JOptionPane();
 							
-							dialog.add( new JDialog(alles, 
-							"Click a button",
-							true));
+							dialog.add( new JDialog(alles, "Click a button", true));
 							int temp = dialog.size()-1;
 							
-
 							optionPane.setBounds(getLocationOnScreen().x, getLocationOnScreen().y + 200, 400, 150);
 							
 							int auswahl = optionPane.showOptionDialog(alles, "Sie haben eine neue Chatanfrage von " + client.getChatanfrage().getVon(), 
@@ -456,14 +448,11 @@ public class UI extends JFrame {
 							} else {
 								client.answerUdpConnection(false);
 							}
-
-							
-							
-							
                         }
                     });
+                } else {
+                	switchView(Views.HOME);
                 }
-                
             }
         });
 		

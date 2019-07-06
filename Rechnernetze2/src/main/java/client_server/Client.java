@@ -91,6 +91,9 @@ public class Client {
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
+		} else if (line.startsWith("10 ")) {
+			chatanfrage.setBoo(false);
+			endUdpConnection();
 		}
 	}
 
@@ -168,6 +171,8 @@ public class Client {
 		byte [] ok = hexStringToByteArray("0000004F004B0000");
 		String chatpartner = data[4];
 
+		System.out.println(benutzername + chatpartner);
+		
 		loadChats();
 		if(nachrichten.containsKey(benutzername + chatpartner))
 			setMsg(nachrichten.get(benutzername + chatpartner));
@@ -184,8 +189,13 @@ public class Client {
 		sendingThread.start();
 	}
 
+	
+	public void sendEndUdpConnection(String name) {
+		sendText("10 " + name);
+	}
+	
 
-	public void endUdpConnection(Socket clientSocket) {
+	public void endUdpConnection() {
 		getSendingThread().interrupt();
 		receivingThread.interrupt();
 		saveChats();
