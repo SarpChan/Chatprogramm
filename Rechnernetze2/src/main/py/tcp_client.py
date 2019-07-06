@@ -144,8 +144,8 @@ class ClientPy:
                 print("FROM CHATPARTNER: " + modifiedMessage.decode())
                   
             #print("message empfangen: " , modifiedMessage , data)
-            if(modifiedMessage == self.ok):
-                self.nachrichtZuChatListe(self.benutzername + self.chatPartner, self.chatPartner + " : " + modifiedMessage)
+            if(modifiedMessage != self.ok):
+                self.nachrichtZuChatListe(self.benutzername + self.chatPartner, message, self.chatPartner)
             #self.nachrichtZuChatListe(self.benutzername + modifiedMessage.split("'")[0], modifiedMessage.split("'")[1], modifiedMessage.split("'")[0])
             
     
