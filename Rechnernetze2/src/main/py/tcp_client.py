@@ -1,7 +1,7 @@
 
 from PyQt5.QtCore import QObject, pyqtSignal
 
-
+import time
 from socket import *
 from pydispatch import dispatcher
 
@@ -117,13 +117,16 @@ class ClientPy:
         #sendThread.start()
         #self.sendeTreads.append([clientSocket, sendThread])
         self.chatEmpfangenThreads.append([self.clientSocket, chatEmpfangenThread])
+        
         threadsendBestaetigung = threading.Thread(target = self.sendBestaetigung)
         threadsendBestaetigung.start()
     
     def sendBestaetigung(self):
         while True:
-            if self.received: 
-                    self.send(self.ok)
+            if self.received:
+                   
+                    #self.send(self.ok)
+                    self.clientSocketSenden.sendto(self.ok, (str(self.udpPort), int(self.udpIP)))
                     self.received = False
                     print("SENDING OK")
        
@@ -134,29 +137,29 @@ class ClientPy:
             if(modifiedMessage == self.ok):
                 self.setSend = True
                 print("RECEIVED OK")
+                
+                
             else:
                 self.received = True
                 print("FROM CHATPARTNER: " + modifiedMessage.decode())
-               
-                
-            print("message empfangen: " , modifiedMessage , data)
-            #self.nachrichtZuChatListe(user + sender, message, sender)
+                  
+            #print("message empfangen: " , modifiedMessage , data)
+            if(modifiedMessage == self.ok):
+                self.nachrichtZuChatListe(self.benutzername + self.chatPartner, self.chatPartner + " : " + modifiedMessage)
             #self.nachrichtZuChatListe(self.benutzername + modifiedMessage.split("'")[0], modifiedMessage.split("'")[1], modifiedMessage.split("'")[0])
             
     
        
     def send(self, message):
-        print("senden:",message, self.udpIP,self.udpPort)
-        
-        if message != self.ok:
-            message  = message + " \n"
+        message  = message + " \n"
   
         for i in range(4):
+            print("senden:",message, self.udpIP,self.udpPort)
             self.setSend = False
             if message != self.ok:
                 self.clientSocketSenden.sendto(message.encode(), (str(self.udpPort), int(self.udpIP)))
-            else:
-                self.clientSocketSenden.sendto(message, (str(self.udpPort), int(self.udpIP)))
+                print("habe nachricht nochmal gesendet:",message, self.udpIP,self.udpPort)  
+                time.sleep(2)
             if self.setSend:
                 break
         
