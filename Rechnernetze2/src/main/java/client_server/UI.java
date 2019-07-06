@@ -226,7 +226,6 @@ public class UI extends JFrame {
 		this.abmelden.setAlignmentX(Component.RIGHT_ALIGNMENT);
 		
 		
-		
 
 		this.registrierPanel.add(Box.createVerticalGlue());
 		this.registrierPanel.add(this.user);
