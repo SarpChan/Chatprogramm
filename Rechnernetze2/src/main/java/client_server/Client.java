@@ -29,6 +29,7 @@ public class Client {
 	private boolean received = false;
 	private boolean sent = true;
 	private MessageListe msg;
+	private String chatpartnerName;
 	
 
 	public class ServerThread extends Thread {
@@ -169,20 +170,20 @@ public class Client {
 		int meinPort = Integer.parseInt(data[3]);
 		String chatHost = data[2];
 		byte [] ok = hexStringToByteArray("0000004F004B0000");
-		String chatpartner = data[4];
+		chatpartnerName = data[4];
 
-		System.out.println(benutzername + chatpartner);
+		System.out.println(benutzername + chatpartnerName);
 		
 		loadChats();
-		if(nachrichten.containsKey(benutzername + chatpartner))
-			setMsg(nachrichten.get(benutzername + chatpartner));
+		if(nachrichten.containsKey(benutzername + chatpartnerName))
+			setMsg(nachrichten.get(benutzername + chatpartnerName));
 		else {
-			setMsg(new MessageListe(benutzername, chatpartner));
-			nachrichten.put(benutzername + chatpartner, getMsg());
+			setMsg(new MessageListe(benutzername, chatpartnerName));
+			nachrichten.put(benutzername + chatpartnerName, getMsg());
 		}	
-		this.chatPartner.setString(benutzername + chatpartner);
+		this.chatPartner.setString(benutzername + chatpartnerName);
 
-		receivingThread = new ReceivingThread(this, meinPort, chatpartner, ok); 
+		receivingThread = new ReceivingThread(this, meinPort, chatpartnerName, ok); 
 		receivingThread.start();
 
 		sendingThread = new SendingThread(this, chatHost, chatPort, ok);
@@ -196,7 +197,9 @@ public class Client {
 	
 
 	public void endUdpConnection() {
-		getSendingThread().interrupt();
+		sendingThread.closeSocket();
+		receivingThread.closeSocket();
+		sendingThread.interrupt();
 		receivingThread.interrupt();
 		saveChats();
 	}
@@ -361,12 +364,24 @@ public class Client {
 		this.benutzername = benutzername;
 	}
 
+	public ReceivingThread getReceivingThread() {
+		return receivingThread;
+	}
+	
 	public SendingThread getSendingThread() {
 		return sendingThread;
 	}
 
 	public void setSendingThread(SendingThread sendingThread) {
 		this.sendingThread = sendingThread;
+	}
+	
+	public String getChatpartnerName() {
+		return chatpartnerName;
+	}
+
+	public void setChatpartnerName(String chatpartnerName) {
+		this.chatpartnerName = chatpartnerName;
 	}
 
 
