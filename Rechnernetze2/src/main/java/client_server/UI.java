@@ -339,8 +339,7 @@ public class UI extends JFrame {
 				client.login(username.getText(), password.getText(), "1");
 
 				if(client.isLoggedIn()) {
-					switchView(Views.HOME);
-					
+					switchView(Views.HOME);	
 				}
 				return;
 			}
@@ -351,8 +350,8 @@ public class UI extends JFrame {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				String text = textArea.getText();
+				textArea.setText("");
 				client.getSendingThread().send(text);
-				
 				return;
 			}
 		});
