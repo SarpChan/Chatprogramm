@@ -4,7 +4,7 @@ from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 from pydispatch import dispatcher
 #from tcp_client import *
-from Chatprogramm.Rechnernetze2.src.main.py.tcp_client import ClientPy, registOKEvent
+from Chatprogramm.Rechnernetze2.src.main.py.tcp_client import ClientPy
 #from Chatprogramm.Chatprogramm.Rechnernetze2.src.main.py.tcp_client import UpdatedListeEvent
 
 
@@ -60,7 +60,7 @@ class Fenster(QWidget):
 
         self.nutzerliste = QListWidget()
         self.chatliste = QListWidget()
-        self.sig = registOKEvent()
+
 
         self.initMe()
 
@@ -95,7 +95,7 @@ class Fenster(QWidget):
         self.register.setDisabled(True)
 
         self.username.textChanged.connect(self.loginChange)
-        self.sig.registokEvent.connect(self.switchToHome)
+
 
         self.userBox.addStretch()
         self.userBox.addWidget(self.user)
@@ -136,19 +136,12 @@ class Fenster(QWidget):
         self.stacked.setVisible(True)
         self.setLayout(self.mainlayout)
 
-
-        print(self.stacked.currentWidget())
-
         self.setGeometry(0, 0, 400, 600)
         self.setWindowTitle("Chatprogramm")
         self.setFixedSize(400, 600)
         self.show()
-
-
         ### Uebergreifend
-        
-       
-        
+
         self.chatBack.clicked.connect(self.back)
         self.chatAbmelden.clicked.connect(self.abmelden)
         self.chatTop.addStretch()
@@ -198,23 +191,33 @@ class Fenster(QWidget):
         dispatcher.connect(self.refillChat, signal = "refillChat", sender= dispatcher.Any)
         dispatcher.connect(self.switchToDialog, signal = "neueChatAnfrage", sender= dispatcher.Any)
         dispatcher.connect(self.refillChat, signal = "neueNachricht", sender = dispatcher.Any)
+        dispatcher.connect(self.chatBeendet, signal="chatEnde", sender = dispatcher.Any)
 
-
+    def chatBeendet(self):
+        """Handlermethode des ChatBeendet Events. Wird ausgelöst, wenn Chat Partner die Verbindung trennt."""
+        self.switchToHome()
 
     def akzeptiere(self):
+        """" Löst im Client das Akzeptieren einer Chatanfrage aus
+        """
         self.c.answerUdpConnection(True)
     def ablehnen(self):
+        """" Löst im Client das Ablehnen einer Chatanfrage aus
+                """
+        self.stacked.setCurrentIndex(self.currentView)
         self.c.answerUdpConnection(False)
 
     def textFeldChanged(self):
-        #absenden Button aktivieren?
+        """" Methode eines Listeners, der überprüft, ob im Text Feld des Chats etwas steht, was versendet werden kann. Kein Leerstring
+                """
         if len(self.textFeld.toPlainText()) != 0:
             self.send.setDisabled(False)
         else:
             self.send.setDisabled(True)
 
     def loginChange(self, change):
-        # Login und Registrier Buttons aktivieren?
+        """"Methode eines Listeners, der darauf achtet, ob sowohl der login-Input
+        als auch Passwort-Input gefüllt sind"""
         if len(self.password.text()) != 0 and len(self.username.text()) != 0:
             self.login.setDisabled(False)
             self.register.setDisabled(False)
@@ -223,7 +226,8 @@ class Fenster(QWidget):
             self.register.setDisabled(True)
 
     def absenden(self):
-        #Nachricht absenden
+        """Handler Methode des absenden Buttons. Gibt dem Client das Signal eine Nachricht
+        an einen Chat Partner zu senden"""
 
         message = self.textFeld.toPlainText()
         self.c.send(message)
@@ -231,46 +235,41 @@ class Fenster(QWidget):
 
 
     def einloggen(self):
+        """Handler Methode des login Buttons.Gibt dem Client das Signal sich beim Server anzumelden """
         
         self.c.login(self.username.text(), self.password.text(), "1")
 
 
 
     def registrieren(self):
-
+        """Handler Methode des login Buttons.Gibt dem Client das Signal sich beim Server zu registrieren """
         self.c.login(self.username.text(), self.password.text(), "0")
 
 
     def refillNutzerliste(self, liste):
-        #Nutzerliste neu befuellen
+        """ Methode eines Listeners auf die Nutzerliste des Clients. Füllt die Nutzerliste in der NutzerView """
         self.nutzerliste.clear()
 
         self.nutzerliste.addItems(liste)
         
 
     def refillChat(self, liste):
-        print(type(liste))
+        """ Methode eines Listeners auf die aktuelle Chatliste des Clients. Füllt den Chatverlauf in der ChatView """
+
         self.chatliste.clear()
         self.chatliste.addItems(liste)
 
-    def addToChat(self, text):
-        self.chatliste.addItem(text)
-
     def chatWith(self, item):
+        """" Sendet Client einen Nutzernamen, mit dem ein Chat begonnen werden soll"""
         self.c.requestUdpConnection(item.text())
 
-    def showChatAnfrage(self, anfrager):
-
-        self.diaText = "Neue Chatanfrage von" + anfrager
-
-        self.dialog.show()
-
-
-
-
     def back(self):
-        #Zurueck zur letzten Ansicht
-        if self.lastView != 0:
+        """ Handler Methode des back Buttons. Ruft die letzte View auf,
+        wenn die letzte View nicht der Login oder Chat ist."""
+        if self.currentView == 2:
+            self.c.sendEndUdpConnection()
+            
+        if self.lastView != 0 or self.lastView!=2:
             temp = self.lastView
             self.lastView =  self.currentView
             self.currentView =  temp
@@ -280,34 +279,42 @@ class Fenster(QWidget):
 
 
     def switchToHome(self):
+        """Setzt die nutzerView als aktuelle Ansicht"""
         self.lastView = self.currentView
-        self.currentView = self.nutzerView
+        self.currentView = 2
         self.stacked.setCurrentIndex(2)
         self.show()
 
     def switchToChat(self):
+        """Setzt die chatView als aktuelle Ansicht"""
         self.lastView = self.currentView
-        self.currentView = self.chatView
+        self.currentView = 1
         self.stacked.setCurrentIndex(1)
         self.show()
 
     def switchToLogin(self):
+        """Setzt die loginView als aktuelle Ansicht"""
         self.username.setText("")
         self.password.setText("")
         self.lastView = None
-        self.currentView = self.loginView
+        self.currentView = 0
         self.stacked.setCurrentIndex(0)
         self.show()
 
     def switchToDialog(self, anfrager):
+        """Setzt die Chat Anfrage als aktuelle Ansicht"""
         self.diaText.setText("Neue Anfrage von " + anfrager)
         self.stacked.setCurrentIndex(3)
         self.show
 
 
     def abmelden(self):
+        """ Handler Methode des abmelden buttons. Meldet den Client vom Server ab"""
 
-        print("test")
+        if self.currentView == 2:
+            self.c.sendEndUdpConnection()
+
+
         self.c.closeConnection()
 
 
