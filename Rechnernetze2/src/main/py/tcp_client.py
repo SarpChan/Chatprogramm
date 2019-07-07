@@ -21,9 +21,6 @@ serverName = "localhost"
 serverPort = 27999
 
 
-class registOKEvent(QObject):
-    registokEvent = pyqtSignal();
-
 class ClientPy:
     def __init__(self):
         self.anfrageliste = []
@@ -39,7 +36,6 @@ class ClientPy:
         self.socket.connect((serverName,serverPort))
         self.benutzername = ""
         self.loggedIn = False;
-        self.sig = registOKEvent()
         self.logRegErfolgSig = 'logErfolg'
         self.chatAufgebaut = 'chatErfolg'
         self.ausgeloggt = 'logout'
@@ -50,13 +46,15 @@ class ClientPy:
         t.start()
         
     def sendText(self,text):
+        """Sendet Nachricht text an Server"""
         print("Sende an Server " + text)
         text = text + " \n"
         self.socket.send(text.encode())
        
         
-    # 0 = Registrieren  1 = Login
+
     def login(self,username, password, option):
+        """Loggt oder Registriert den Client beim Server. 0 = Login, 1 = Registrieren"""
         print("login")
         # "sichere" Übertragung des Passworts
         password = password[::-1] 
@@ -64,65 +62,58 @@ class ClientPy:
         
         self.sendText(line)
         self.benutzername = username;
-       
-    
-        
+
     def closeConnection(self):
+        """Leitet Abmelden mit Server ein. Server bleibt aktiv für einen login"""
         text = self.sendText("3 " + self.benutzername)
-            
-       
-           
-        
+
     def schliessen(self):
+        """Leitet Abmelden mit Server ein. Socket wird geschlossen"""
         self.sendText("6 ");    
-        
-        
+
     def requestActiveUser(self):
+        """Fragt den Server nach einer aktuellen Nutzerliste der aktiven Nutzer"""
         text = self.sendText("7 " + self.benutzername)
         print(self.benutzername + "name")
         return text
 
-
-
     # bei Server UDP-Connection mit user "name" anfragen
     def requestUdpConnection(self, name):
+        """Sendet einem aktiven Nutzer über den Server eine Chatanfrage"""
         self.sendText("2 " + name)
         
     def answerUdpConnection(self, bool):
+        """Antwortet auf eine Chatanfrage. True = akzeptieren, False = ablehnen"""
         print("hallo")
         if(bool):
             self.sendText("8 " + self.anfrageliste[-1]);
         else:
             self.sendText("9 " + self.anfrageliste[-1]);
-        
-    
+
     def buildUdpConnection(self, line):
+        """Baut udp Connection mit anderem aktiven Nutzer auf"""
         self.udpIP = chatPort = int(line.split(" ")[3])
         self.udpPort = chatHostAdresse = line.split(" ")[2]
         self.meinPort = int(line.split(" ")[1])
         self.chatPartner = line.split(" ")[4]
         self.ok = ("0000004F004B0000").encode()
-        
         self.received = False
         self.setSend = True
-        
         #neuer Sochet fuer UDP ?
         self.clientSocket = socket(AF_INET, SOCK_DGRAM)
         self.clientSocket.bind((("127.0.0.1"), int(self.meinPort)))
-        
         self.clientSocketSenden = socket(AF_INET, SOCK_DGRAM)
-        
         chatEmpfangenThread = threading.Thread(target = self.chatEmpfangen)
         #sendThread = threading.Thread(target = self.chatSenden, args=(chatHostAdresse, chatPort, clientSocket))
         chatEmpfangenThread.start()
         #sendThread.start()
         #self.sendeTreads.append([clientSocket, sendThread])
         self.chatEmpfangenThreads.append([self.clientSocket, chatEmpfangenThread])
-        
         threadsendBestaetigung = threading.Thread(target = self.sendBestaetigung)
         threadsendBestaetigung.start()
     
     def sendBestaetigung(self):
+        """Sendet Ankommensbestätigung zu einer Nachricht zum Chat Partner"""
         while True:
             if self.received:
                    
@@ -132,6 +123,7 @@ class ClientPy:
                     print("SENDING OK")
        
     def chatEmpfangen(self):
+        """ Reagiert auf eine ankommende Nachricht"""
 
         while(True):
             modifiedMessage, data = self.clientSocket.recvfrom(2048)
@@ -155,6 +147,7 @@ class ClientPy:
     
        
     def send(self, message):
+        """Sendet Nachricht an Chat Partner"""
         self.nachrichtZuChatListe(self.benutzername + self.chatPartner, message, self.benutzername)
         message  = message + " \n"
 
@@ -173,6 +166,7 @@ class ClientPy:
         
     
     def endUdpConnection(self):
+        """Beendet UDP Connection mit Chatpartner """
         print("threads beenden")
         #for thread in self.sendeTreads:
         #   if i[0] == clientsocket:
@@ -187,8 +181,7 @@ class ClientPy:
                 
                 
     def nachrichtZuChatListe(self, key,  message, sender):
-
-
+        """Fügt Nachrichten zur Chatverwaltung hinzu. Für jeden Chatpartner wird eine Liste erstelllt"""
         if key in self.chatListe:
             self.chatListe[key].append(sender + " : " + message)
         else:
@@ -199,6 +192,7 @@ class ClientPy:
         
         
     def processReceived(self):
+        """Reagiert auf eingehende Nachricht vom Server"""
         while True:
             
             
