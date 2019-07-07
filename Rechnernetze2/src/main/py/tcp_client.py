@@ -96,33 +96,43 @@ class ClientPy:
         
     def answerUdpConnection(self, bool):
         """Antwortet auf eine Chatanfrage. True = akzeptieren, False = ablehnen"""
-        print("hallo")
+        print("hallo", self.chatten)
         if(bool):
             if self.nutzerliste.__contains__(self.anfrageliste[-1]):
+                if self.chatten:
+                    print("beende conection")
+                    self.sendEndUdpConnection()
+                    time.sleep(2)
+                   
                 self.sendText("8 " + self.anfrageliste[-1])
+                print("self.chatten", self.chatten)
                 self.chatten = True
+                
                 print("anfrager:", self.anfrageliste[-1])
         else:
             self.sendText("9 " + self.anfrageliste[-1]);
 
     def buildUdpConnection(self, line):
         """Baut udp Connection mit anderem aktiven Nutzer auf"""
-
+        
         self.udpIP = chatPort = int(line.split(" ")[3])
         self.udpPort = chatHostAdresse = line.split(" ")[2]
         self.meinPort = int(line.split(" ")[1])
         self.chatPartner = line.split(" ")[4]
         print("connection: ", line)
         
+        
+        self.loadChat(self.benutzername + self.chatPartner)
+        
         self.received = False
         self.setSend = True
-        
+      
        
         self.clientSocket = socket(AF_INET, SOCK_DGRAM)
        
-       # if self.clientSocketbind == False:
+        print("MEIN PORT:" , (self.meinPort))
         self.clientSocket.bind((("127.0.0.1"), int(self.meinPort)))
-        self.clientSocketbind = True
+       
             
         self.clientSocketSenden = socket(AF_INET, SOCK_DGRAM)
         
@@ -159,7 +169,6 @@ class ClientPy:
                 print("sende quit1 empfangen")
                 self.clientSocketSenden.close()
                 self.clientSocket.close()
-                self.test = False
                 break
             
                 
@@ -193,37 +202,37 @@ class ClientPy:
             if self.setSend:
                 break
         
-        
+    def loadChat(self, key):
+        if key in self.chatListe:
+            dispatcher.send(signal="refillChat", sender=dispatcher.Any, liste = self.chatListe[key])
+        else:
+            self.chatListe[key] = []
+            dispatcher.send(signal="refillChat", sender=dispatcher.Any, liste = self.chatListe[key])
+              
 
                 
     def nachrichtZuChatListe(self, key,  message, sender):
         """Fügt Nachrichten zur Chatverwaltung hinzu. Für jeden Chatpartner wird eine Liste erstelllt"""
         if key in self.chatListe:
             self.chatListe[key].append(sender + " : " + message)
-        else:
-            self.chatListe[key] = [sender + " : " + message]
+        
         print(self.chatListe[key])
         dispatcher.send(signal="neueNachricht", sender = dispatcher.Any, liste = self.chatListe[key])
     
     def endUdpConnection(self):
         """Beendet UDP Connection mit Chatpartner """
-        #2
+       
         print("threads beenden")
-        #self.threadStop = True
-        self.test = True
+        self.chatten = False
         self.clientSocketSenden.sendto(("quit").encode(), (str(self.udpPort), int(self.udpIP)))
         
-        #while self.test:
-        #    print("warte") 
-        #self.clientSocketSenden.close()
-        #self.clientSocket.close()
-       
+  
     
     def sendEndUdpConnection(self):
-        #1
+        
         print("sendEndUdpConnection")
         self.sendText("10 " + self.chatPartner)
-        self.chatten = False
+        #self.chatten = False
         self.endUdpConnection()
         
         
@@ -273,8 +282,8 @@ class ClientPy:
                 
                 '''Schliessen'''
             elif antwort.split(" ")[0] == "6":
-                if  self.chatten == True:
-                    self.sendEndUdpConnection()
+                #if  self.chatten == True:
+                #    self.sendEndUdpConnection()
                     
                 self.loggedIn = False
                 dispatcher.send(signal=self.ausgeloggt, sender=dispatcher.Any)
@@ -283,12 +292,9 @@ class ClientPy:
                 '''Chat von Chatpartner beendet'''
             elif antwort.split(" ")[0] == "10":
                 dispatcher.send(signal=self.chatBeendet, sender = dispatcher.Any)
-                print("10 10 10 10")
-                self.test = False
-                #self.clientSocketSenden.close()
-                #self.clientSocket.close()
-                
-                self.chatten = False
+               # self.chatten = False
+            if antwort == None:
+                break
 
 
                 

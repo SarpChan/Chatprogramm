@@ -41,6 +41,7 @@ class Fenster(QWidget):
         self.accRef = QHBoxLayout()
         self.diaBox = QVBoxLayout()
 
+
         self.user = QLabel("username")
         self.username = QLineEdit()
 
@@ -201,11 +202,15 @@ class Fenster(QWidget):
         """" Löst im Client das Akzeptieren einer Chatanfrage aus
         """
         self.c.answerUdpConnection(True)
+        
+        
     def ablehnen(self):
         """" Löst im Client das Ablehnen einer Chatanfrage aus
                 """
         self.stacked.setCurrentIndex(self.currentView)
         self.c.answerUdpConnection(False)
+        
+        
 
     def textFeldChanged(self):
         """" Methode eines Listeners, der überprüft, ob im Text Feld des Chats etwas steht, was versendet werden kann. Kein Leerstring
@@ -269,7 +274,7 @@ class Fenster(QWidget):
         if self.currentView == 1:
             self.c.sendEndUdpConnection()
             
-        if self.lastView != 0 or self.lastView!=2:
+        if self.lastView != 0 or self.lastView!=1:
             temp = self.lastView
             self.lastView =  self.currentView
             self.currentView =  temp
@@ -287,6 +292,7 @@ class Fenster(QWidget):
 
     def switchToChat(self):
         """Setzt die chatView als aktuelle Ansicht"""
+        
         self.lastView = self.currentView
         self.currentView = 1
         self.stacked.setCurrentIndex(1)
@@ -311,7 +317,7 @@ class Fenster(QWidget):
     def abmelden(self):
         """ Handler Methode des abmelden buttons. Meldet den Client vom Server ab"""
 
-        if self.currentView == 2:
+        if self.currentView == 1:
             self.c.sendEndUdpConnection()
 
 
@@ -326,6 +332,7 @@ def main():
 
 if __name__== "__main__":
     main()
+ 
     
 
 
