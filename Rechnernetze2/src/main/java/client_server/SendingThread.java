@@ -38,10 +38,8 @@ public class SendingThread extends Thread {
 	@Override
 	public void run() {
 		
-		while(true && !clientSocket.isClosed()) {
+		while(!clientSocket.isClosed()) {
 			try {
-				clientSocket.setSoTimeout(0);
-
 				if(client.isReceived()) { 
 					sendPacket = new DatagramPacket(ok, ok.length, IPAddress, chatPort);
 					clientSocket.send(sendPacket);

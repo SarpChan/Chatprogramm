@@ -63,10 +63,8 @@ public class UI extends JFrame {
 	private DefaultListModel<String> nutzerModel;
 	private DefaultListModel<Message> chatModel;
 	private Dimension centerDim;
-	private JOptionPane optionPane;
-	private ArrayList<JDialog> dialog = new ArrayList();
+	private ArrayList<JDialog> dialog = new ArrayList<>();
 	private Views lastView, currentView;
-	private String anfragender;
 	private UI alles;
 
 
@@ -75,7 +73,6 @@ public class UI extends JFrame {
 		this.client = cl;
 
 		setLayout(new BorderLayout());
-		this.anfragender = "";
 		this.centerDim = new Dimension(400, 450);
 		this.currentView = Views.LOGIN;
 		this.lastView = null;
@@ -225,20 +222,11 @@ public class UI extends JFrame {
 		this.back.setAlignmentX(Component.LEFT_ALIGNMENT);
 		this.abmelden.setAlignmentX(Component.RIGHT_ALIGNMENT);
 
-
-
 		this.registrierPanel.add(Box.createVerticalGlue());
 		this.registrierPanel.add(this.user);
 		this.registrierPanel.add(this.pass);
 		this.registrierPanel.add(this.buttons);
 		this.registrierPanel.add(Box.createVerticalGlue());
-
-
-
-
-
-
-		this.alles = alles;
 
 
 
@@ -362,7 +350,6 @@ public class UI extends JFrame {
 				if(client.hasChatanfrage()) {
 					String name = client.getChatanfrage().getVon();
 					client.sendEndUdpConnection(name);
-					client.endUdpConnection();
 				}
 				client.close();
 				switchView(Views.LOGIN);
@@ -448,8 +435,8 @@ public class UI extends JFrame {
 							int auswahl = optionPane.showOptionDialog(alles, "Sie haben eine neue Chatanfrage von " + client.getChatanfrage().getVon(), 
 									"Chatanfrage",optionPane.YES_NO_OPTION , optionPane.QUESTION_MESSAGE, null, null, 1);
 							if (auswahl == 0){
+								String name = client.getChatpartnerName();
 								if(client.getSendingThread() != null && !client.getSendingThread().isInterrupted()) {
-									String name = client.getChatpartnerName();
 									client.sendEndUdpConnection(name);
 									client.endUdpConnection();
 								}
