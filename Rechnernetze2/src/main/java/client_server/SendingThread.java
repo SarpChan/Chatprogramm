@@ -1,14 +1,16 @@
 package client_server;
 
-import java.io.BufferedReader;
+
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
 import java.net.UnknownHostException;
 
+/**
+ * Klasse, die von Thread erbt und Nachrichten sendet
+ */
 public class SendingThread extends Thread {
 	
 	private byte[] sendData = new byte[1024];
@@ -19,7 +21,13 @@ public class SendingThread extends Thread {
 	private Client client;
 	private int chatPort;
 	
-	
+	/**
+	 * Konstruktor
+	 * @param client Client, in dem der ReceivingThread instanziiert wurde
+	 * @param chatHost Host des Chatpartners
+	 * @param chatPort Port des Chatpartners
+	 * @param ok ok-Byte, das bei Empfang einer Nachricht gesendet wird
+	 */
 	public SendingThread(Client client, String chatHost, int chatPort, byte [] ok) {
 		super();
 		this.client = client;
@@ -35,13 +43,14 @@ public class SendingThread extends Thread {
 		}
 	}
 	
+	/**
+	 * Sendet ok-Byte, wenn der Client eine Nachricht empfangen hat
+	 */
 	@Override
 	public void run() {
 		
-		while(true && !clientSocket.isClosed()) {
+		while(!clientSocket.isClosed()) {
 			try {
-				clientSocket.setSoTimeout(0);
-
 				if(client.isReceived()) { 
 					sendPacket = new DatagramPacket(ok, ok.length, IPAddress, chatPort);
 					clientSocket.send(sendPacket);
@@ -54,6 +63,10 @@ public class SendingThread extends Thread {
 		}
 	}
 	
+	/**
+	 * sendet Nachricht an Chatpartner
+	 * @param text Nachricht, die gesendet werden soll
+	 */
 	public void send(String text) {
 		sendData = text.getBytes();
 
@@ -79,6 +92,9 @@ public class SendingThread extends Thread {
 		}
 	}
 	
+	/**
+	 * schliesst den Socket
+	 */
 	public void closeSocket() {
 		clientSocket.close();
 	}

@@ -200,7 +200,7 @@ public class Teilserver {
 
 	public void handleChatResponse(String [] line, Socket socket) {
 		if(line[0].contains("8")) {
-			if(anfrageverw.getChatanfrage(line[1]).equals(user)) {
+			if(anfrageverw.getChatanfrage(line[1]).equals(user) && nutzerverw.getActiveUserlist().contains(line[1])) {
 				Socket chatPartnerSocket = nutzerverw.getActiveUserSocket(line[1]);
 				int chatPort = chatPartnerSocket.getPort();
 				InetAddress chatIp = chatPartnerSocket.getInetAddress();
@@ -252,7 +252,6 @@ public class Teilserver {
 
 	public void handleSchliessen(String [] line){
 		String benutzername = line[1];
-
 
 		try {
 			writer.write("6 200" + "\n");
