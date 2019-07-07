@@ -59,7 +59,7 @@ class ClientPy:
         
     def sendText(self,text):
         """Sendet Nachricht text an Server"""
-        print("Sende an Server " + text)
+      
         text = text + " \n"
         self.socket.send(text.encode())
        
@@ -67,7 +67,7 @@ class ClientPy:
 
     def login(self,username, password, option):
         """Loggt oder Registriert den Client beim Server. 0 = Login, 1 = Registrieren"""
-        print("login")
+      
         # "sichere" Übertragung des Passworts
         password = password[::-1] 
         line = option + " " + username + " " + password;
@@ -86,7 +86,7 @@ class ClientPy:
     def requestActiveUser(self):
         """Fragt den Server nach einer aktuellen Nutzerliste der aktiven Nutzer"""
         text = self.sendText("7 " + self.benutzername)
-        print(self.benutzername + "name")
+       
         return text
 
     # bei Server UDP-Connection mit user "name" anfragen
@@ -96,19 +96,19 @@ class ClientPy:
         
     def answerUdpConnection(self, bool):
         """Antwortet auf eine Chatanfrage. True = akzeptieren, False = ablehnen"""
-        print("hallo", self.chatten)
+      
         if(bool):
             if self.nutzerliste.__contains__(self.anfrageliste[-1]):
                 if self.chatten:
-                    print("beende conection")
+                  
                     self.sendEndUdpConnection()
                     time.sleep(2)
                    
                 self.sendText("8 " + self.anfrageliste[-1])
-                print("self.chatten", self.chatten)
+             
                 self.chatten = True
                 
-                print("anfrager:", self.anfrageliste[-1])
+                
         else:
             self.sendText("9 " + self.anfrageliste[-1]);
 
@@ -119,7 +119,7 @@ class ClientPy:
         self.udpPort = chatHostAdresse = line.split(" ")[2]
         self.meinPort = int(line.split(" ")[1])
         self.chatPartner = line.split(" ")[4]
-        print("connection: ", line)
+      
         
         
         self.loadChat(self.benutzername + self.chatPartner)
@@ -130,7 +130,7 @@ class ClientPy:
        
         self.clientSocket = socket(AF_INET, SOCK_DGRAM)
        
-        print("MEIN PORT:" , (self.meinPort))
+      
         self.clientSocket.bind((("127.0.0.1"), int(self.meinPort)))
        
             
@@ -150,7 +150,7 @@ class ClientPy:
             if self.received:
                     self.clientSocketSenden.sendto(self.ok, (str(self.udpPort), int(self.udpIP)))
                     self.received = False
-                    #print("SENDING OK")
+                    
            
        
     def chatEmpfangen(self):
@@ -158,15 +158,15 @@ class ClientPy:
         while(True):
             
             modifiedMessage, data = self.clientSocket.recvfrom(2048)
-            print("modifiedMessage: ", modifiedMessage)
+          
             if modifiedMessage.decode() == 'quit':
-                print("sende quit1")
+             
                 self.clientSocketSenden.sendto(("quit1").encode(), (str(self.udpPort), int(self.udpIP)))
                 self.clientSocketSenden.close()
                 self.clientSocket.close()
                 break
             if modifiedMessage.decode() == 'quit1':
-                print("sende quit1 empfangen")
+               
                 self.clientSocketSenden.close()
                 self.clientSocket.close()
                 break
@@ -174,15 +174,13 @@ class ClientPy:
                 
             if(modifiedMessage == self.ok):
                 self.setSend = True
-                #print("RECEIVED OK")   
+              
             else:
                 self.received = True
-                print("FROM CHATPARTNER: " + modifiedMessage.decode())
+             
                   
             if(modifiedMessage != self.ok):
-                print(type(modifiedMessage.decode())    )
-                print(type(self.benutzername)  )
-                print(type(self.chatPartner)   )
+              
                 self.nachrichtZuChatListe(self.benutzername + self.chatPartner, modifiedMessage.decode().rstrip(), self.chatPartner)
           
            
@@ -193,11 +191,11 @@ class ClientPy:
         message  = message + " \n"
 
         for i in range(4):
-            print("senden:",message, self.udpIP,self.udpPort)
+         
             self.setSend = False
             if message != self.ok:
                 self.clientSocketSenden.sendto(message.encode(), (str(self.udpPort), int(self.udpIP)))
-                print("habe nachricht nochmal gesendet:",message, self.udpIP,self.udpPort)  
+               
                 time.sleep(2)
             if self.setSend:
                 break
@@ -216,13 +214,13 @@ class ClientPy:
         if key in self.chatListe:
             self.chatListe[key].append(sender + " : " + message)
         
-        print(self.chatListe[key])
+     
         dispatcher.send(signal="neueNachricht", sender = dispatcher.Any, liste = self.chatListe[key])
     
     def endUdpConnection(self):
         """Beendet UDP Connection mit Chatpartner """
        
-        print("threads beenden")
+      
         self.chatten = False
         self.clientSocketSenden.sendto(("quit").encode(), (str(self.udpPort), int(self.udpIP)))
         
@@ -230,7 +228,7 @@ class ClientPy:
     
     def sendEndUdpConnection(self):
         
-        print("sendEndUdpConnection")
+       
         self.sendText("10 " + self.chatPartner)
         #self.chatten = False
         self.endUdpConnection()
@@ -242,12 +240,12 @@ class ClientPy:
         while True:
             
             antwort = self.socket.recv(1024).decode("utf-8")
-            print("Vom Server empfangen", antwort)
+        
             
             ''' Chatanfrage bekommen'''
             if antwort.split(" ")[0] == "5":
                 
-                print("Chat anfrage von " + antwort.split(" ")[1])
+              
                 self.anfrageliste.append(antwort.split(" ")[1])
                 dispatcher.send(signal = self.neueChatAnfrage, sender = dispatcher.Any, anfrager = antwort.split(" ")[1])
 
@@ -261,7 +259,7 @@ class ClientPy:
             elif antwort.split(" ")[0] == "2":
                 self.buildUdpConnection(antwort)
                 dispatcher.send(signal = self.chatAufgebaut, sender = dispatcher.Any)
-                print("Chat anfrage angenommen")
+             
                 
                 ''' erfolgreich ausgelogged'''
             elif antwort.split(" ")[0] == "3":
@@ -273,12 +271,13 @@ class ClientPy:
 
                 ''' Aktive Nutzerliste '''
             elif antwort.split(" ")[0] == "7":
-                print(antwort)
+           
+
                 if len(antwort.split(" ")) > 1:
                     self.nutzerliste = []
                     self.nutzerliste = antwort.split(" ")[1:-1]
                     dispatcher.send(signal = self.refillNutzer, sender = dispatcher.Any, liste = self.nutzerliste)
-                    print(self.nutzerliste)
+                  
                 
                 '''Schliessen'''
             elif antwort.split(" ")[0] == "6":
