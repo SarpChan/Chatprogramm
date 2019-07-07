@@ -3,8 +3,8 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 from pydispatch import dispatcher
-#from tcp_client import *
-from Chatprogramm.Rechnernetze2.src.main.py.tcp_client import ClientPy
+from tcp_client import *
+#from Chatprogramm.Rechnernetze2.src.main.py.tcp_client import ClientPy
 #from Chatprogramm.Chatprogramm.Rechnernetze2.src.main.py.tcp_client import UpdatedListeEvent
 
 
@@ -264,9 +264,9 @@ class Fenster(QWidget):
         self.c.requestUdpConnection(item.text())
 
     def back(self):
-        """ Handler Methode des back Buttons. Ruft die letzte View auf,
+        """ Handler Methode de back Buttons. Ruft die letzte View auf,
         wenn die letzte View nicht der Login oder Chat ist."""
-        if self.currentView == 2:
+        if self.currentView == 1:
             self.c.sendEndUdpConnection()
             
         if self.lastView != 0 or self.lastView!=2:
