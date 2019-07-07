@@ -298,6 +298,7 @@ class Fenster(QWidget):
         self.stacked.setCurrentIndex(1)
         self.show()
 
+
     def switchToLogin(self):
         """Setzt die loginView als aktuelle Ansicht"""
         self.username.setText("")
