@@ -39,9 +39,9 @@ public class Teilserver {
 
 			@Override
 			public void onChange() {
-				
+
 				handleActiveUserReq(user);
-				
+
 			}
 		});
 	}
@@ -69,7 +69,7 @@ public class Teilserver {
 					handleAnmelden(eingabe, socket);
 					break;
 				case "2":
-					handleChatanfrage(eingabe, socket);
+					handleChatanfrage(eingabe);
 					break;
 				case "3":
 					handleAbmelden(eingabe);
@@ -79,6 +79,9 @@ public class Teilserver {
 					break;
 				case "8":
 					handleChatResponse(eingabe, socket);
+					break;
+				case "10":
+					handleEndChat(eingabe);
 					break;
 				default:
 					System.out.println("default " + line);
@@ -107,7 +110,7 @@ public class Teilserver {
 			} 
 			writer.write("\n");
 			writer.flush();
-			
+
 		}
 		catch(IOException e){
 			e.printStackTrace();
@@ -121,7 +124,6 @@ public class Teilserver {
 		final StringBuffer passwort = new StringBuffer(reverse).reverse();
 
 		if(!nutzerverw.compareUser(benutzername)) {
-			
 
 			try {
 				writer.write("0 200 \n");
@@ -153,7 +155,7 @@ public class Teilserver {
 				if(nutzerverw.comparePass(benutzername, passwort.toString())) {
 					if(!nutzerverw.isUserActive(benutzername)) {
 						System.out.println("Eingeloggt");
-						
+
 						writer.write("1 200 \n");
 						writer.flush();
 						nutzerverw.addActiveUser(benutzername, socket);
@@ -172,14 +174,14 @@ public class Teilserver {
 				writer.write("Nutzer nicht vorhanden \n");
 				writer.flush();
 			}
-			
+
 		} catch (IOException e){
 			e.printStackTrace();
 		}
 	}
 
 
-	public void handleChatanfrage(String []line, Socket socket) {
+	public void handleChatanfrage(String []line) {
 		Socket chatPartnerSocket = nutzerverw.getActiveUserSocket(line[1]);
 
 		try {
@@ -206,10 +208,10 @@ public class Teilserver {
 				try {
 					BufferedWriter chatPartnerWriter = new BufferedWriter(new OutputStreamWriter(chatPartnerSocket.getOutputStream()));
 
-					chatPartnerWriter.write("2 " + socket.getPort() + " " + socket.getInetAddress().getHostAddress() + " " + chatPort + " " + line[1] + " \n");
+					chatPartnerWriter.write("2 " + socket.getPort() + " " + socket.getInetAddress().getHostAddress() + " " + chatPort + " " + user + " \n");
 					chatPartnerWriter.flush();
 
-					writer.write("2 " + chatPort + " " + chatIp.getHostAddress() + " " + socket.getPort() + " " + user + " \n");
+					writer.write("2 " + chatPort + " " + chatIp.getHostAddress() + " " + socket.getPort() + " " + line[1] + " \n");
 					writer.flush();
 				} catch (IOException e1) {
 					e1.printStackTrace();
@@ -220,9 +222,24 @@ public class Teilserver {
 	}
 
 
+	public void handleEndChat(String []line) {
+		Socket chatPartnerSocket = nutzerverw.getActiveUserSocket(line[1]);
+
+		try {
+			BufferedWriter chatPartnerWriter = new BufferedWriter(new OutputStreamWriter(chatPartnerSocket.getOutputStream()));
+
+			chatPartnerWriter.write("10 " + user + " \n");
+			chatPartnerWriter.flush();
+			System.out.println("Beenden des Chats mit " + user);
+		} catch (IOException e1) {
+			e1.printStackTrace();
+		}
+	}
+
+
 	public void handleAbmelden(String [] line) {
 		String benutzername = line[1];
-		
+
 		try {
 			writer.write("3 200" + " \n");
 			writer.flush();
@@ -235,7 +252,7 @@ public class Teilserver {
 
 	public void handleSchliessen(String [] line){
 		String benutzername = line[1];
-		
+
 
 		try {
 			writer.write("6 200" + "\n");

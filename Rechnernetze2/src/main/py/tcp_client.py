@@ -1,7 +1,7 @@
 
 from PyQt5.QtCore import QObject, pyqtSignal
 
-
+import time
 from socket import *
 from pydispatch import dispatcher
 
@@ -32,9 +32,8 @@ class ClientPy:
         self.chatEmpfangenThreads = []
         self.chatListe = {}
         
-        self.udpIP = ""
-        self.udpPort = ""
-        self.clientSocket = ""
+        
+     
         #Server TCP Verbindung
         self.socket = socket(AF_INET, SOCK_STREAM)
         self.socket.connect((serverName,serverPort))
@@ -53,12 +52,8 @@ class ClientPy:
     def sendText(self,text):
         print("Sende an Server " + text)
         text = text + " \n"
-      
         self.socket.send(text.encode())
-        #antwort = self.socket.recv(1024)
-        #print("Vom Server empfangen: " + str(antwort))
-            
-        #return str(antwort)
+       
         
     # 0 = Registrieren  1 = Login
     def login(self,username, password, option):
@@ -102,41 +97,80 @@ class ClientPy:
         
     
     def buildUdpConnection(self, line):
-        chatPort = int(line.split(" ")[1])
-        chatHostAdresse = line.split(" ")[2]
-        meinPort = int(line.split(" ")[3])
+        self.udpIP = chatPort = int(line.split(" ")[3])
+        self.udpPort = chatHostAdresse = line.split(" ")[2]
+        self.meinPort = int(line.split(" ")[1])
+        self.chatPartner = line.split(" ")[4]
+        self.ok = ("0000004F004B0000").encode()
         
-        chatPartner = line.split(" ")[4]
+        self.received = False
+        self.setSend = True
         
         #neuer Sochet fuer UDP ?
         self.clientSocket = socket(AF_INET, SOCK_DGRAM)
+        self.clientSocket.bind((("127.0.0.1"), int(self.meinPort)))
+        
+        self.clientSocketSenden = socket(AF_INET, SOCK_DGRAM)
+        
         chatEmpfangenThread = threading.Thread(target = self.chatEmpfangen)
         #sendThread = threading.Thread(target = self.chatSenden, args=(chatHostAdresse, chatPort, clientSocket))
         chatEmpfangenThread.start()
         #sendThread.start()
-        
         #self.sendeTreads.append([clientSocket, sendThread])
         self.chatEmpfangenThreads.append([self.clientSocket, chatEmpfangenThread])
         
+        threadsendBestaetigung = threading.Thread(target = self.sendBestaetigung)
+        threadsendBestaetigung.start()
+    
+    def sendBestaetigung(self):
+        while True:
+            if self.received:
+                   
+                    #self.send(self.ok)
+                    self.clientSocketSenden.sendto(self.ok, (str(self.udpPort), int(self.udpIP)))
+                    self.received = False
+                    print("SENDING OK")
+       
     def chatEmpfangen(self):
+
         while(True):
-            modifiedMessage, serverAddress = self.clientSocket.recvfrom(2048)
-            print(modifiedMessage)
-            #TODO self.nachrichtZuChatListe(self.benutzername + sender, message, sender)
+            modifiedMessage, data = self.clientSocket.recvfrom(2048)
+            if(modifiedMessage == self.ok):
+                self.setSend = True
+                print("RECEIVED OK")
+                
+                
+            else:
+                self.received = True
+                print("FROM CHATPARTNER: " + modifiedMessage.decode())
+                  
+            #print("message empfangen: " , modifiedMessage , data)
+            if(modifiedMessage != self.ok):
+                print(type(modifiedMessage.decode())    )
+                print(type(self.benutzername)  )
+                print(type(self.chatPartner)   )
+                self.nachrichtZuChatListe(self.benutzername + self.chatPartner, modifiedMessage.decode().rstrip(), self.chatPartner)
+            #self.nachrichtZuChatListe(self.benutzername + modifiedMessage.split("'")[0], modifiedMessage.split("'")[1], modifiedMessage.split("'")[0])
             
-    '''def chatSenden(self, udpIP, udpPort,clientSocket):
-        wh chatSenden(self, udpIP, udpPort,clientSocket):
-        while(True):
-            message = bytes(input("Chat sentence you: "), 'utf-8')
-            clientSocket.sendto(MESSAGE, (udpIP, udpPort))'''
-
-
-
-            
+    
+       
     def send(self, message):
-        #TODO self.chatListe[self.benutzername + chatpartner].append(benutzername " : " + message)
-        self.clientSocket.sendto(message, (self.udpIP, self.udpPort))
+        self.nachrichtZuChatListe(self.benutzername + self.chatPartner, message, self.benutzername)
+        message  = message + " \n"
 
+        for i in range(4):
+            print("senden:",message, self.udpIP,self.udpPort)
+            self.setSend = False
+            if message != self.ok:
+                self.clientSocketSenden.sendto(message.encode(), (str(self.udpPort), int(self.udpIP)))
+                print("habe nachricht nochmal gesendet:",message, self.udpIP,self.udpPort)  
+                time.sleep(2)
+            if self.setSend:
+                break
+        
+        
+        
+        
     
     def endUdpConnection(self):
         print("threads beenden")
@@ -152,12 +186,15 @@ class ClientPy:
         self.clientSocket.close()
                 
                 
-    def nachrichtZuChatliste(self, key,  message, sender):
+    def nachrichtZuChatListe(self, key,  message, sender):
 
 
-        if self.chatListe[key]:
+        if key in self.chatListe:
             self.chatListe[key].append(sender + " : " + message)
-        dispatcher.send(signal="neueNachricht", sender = dispatcher.Any, key = key )
+        else:
+            self.chatListe[key] = [sender + " : " + message]
+        print(self.chatListe[key])
+        dispatcher.send(signal="neueNachricht", sender = dispatcher.Any, liste = self.chatListe[key])
 
         
         

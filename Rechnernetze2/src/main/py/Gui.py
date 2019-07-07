@@ -197,10 +197,9 @@ class Fenster(QWidget):
         dispatcher.connect(self.refillNutzerliste, signal = "refillNutzer", sender= dispatcher.Any)
         dispatcher.connect(self.refillChat, signal = "refillChat", sender= dispatcher.Any)
         dispatcher.connect(self.switchToDialog, signal = "neueChatAnfrage", sender= dispatcher.Any)
-        dispatcher.connect(self.neueNachricht, signal = "neueNachricht", sender = dispatcher.Any)
+        dispatcher.connect(self.refillChat, signal = "neueNachricht", sender = dispatcher.Any)
 
-    def neueNachricht(self, key ):
-        self.chatliste = self.c.chatListe[key]
+
 
     def akzeptiere(self):
         self.c.answerUdpConnection(True)
@@ -250,6 +249,7 @@ class Fenster(QWidget):
         
 
     def refillChat(self, liste):
+        print(type(liste))
         self.chatliste.clear()
         self.chatliste.addItems(liste)
 
