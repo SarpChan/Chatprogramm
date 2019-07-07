@@ -253,7 +253,6 @@ public class Teilserver {
 	public void handleSchliessen(String [] line){
 		String benutzername = line[1];
 
-
 		try {
 			writer.write("6 200" + "\n");
 			writer.flush();
