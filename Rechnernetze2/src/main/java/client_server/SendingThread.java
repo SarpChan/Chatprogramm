@@ -55,7 +55,6 @@ public class SendingThread extends Thread {
 					sendPacket = new DatagramPacket(ok, ok.length, IPAddress, chatPort);
 					clientSocket.send(sendPacket);
 					client.setReceived(false);
-					System.out.println("SENDING OK");
 				} 
 			} catch (IOException e) {
 				e.printStackTrace();
@@ -75,7 +74,6 @@ public class SendingThread extends Thread {
 		for(int i = 0; i < 4; i++) {
 			client.setSent(false);
 			sendPacket = new DatagramPacket(sendData, sendData.length, IPAddress, chatPort);
-			System.out.println("SENDING: " + text);
 			try {
 				clientSocket.send(sendPacket);
 			} catch (IOException e1) {

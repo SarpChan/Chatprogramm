@@ -20,7 +20,6 @@ public class Server
 		try
 		{
 			final ServerSocket serverSocket = new ServerSocket(27999);
-			System.out.println("Warte auf Client...");
 			while (true)
 			{
 				try
@@ -56,24 +55,6 @@ public class Server
 	public static void main(String[] args){
 		new Server();
 	}
-
-	
-
-	
-	
-
-	
-		
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
 
 	
 }

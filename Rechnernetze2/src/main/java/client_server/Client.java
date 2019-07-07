@@ -101,7 +101,6 @@ public class Client {
 					try {
 						serverReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 						line = serverReader.readLine();
-						System.out.println("Vom Server empfangen: " + line);
 					} catch (IOException e) {
 						e.printStackTrace();
 					}
@@ -120,7 +119,6 @@ public class Client {
 	{
 		try
 		{
-			System.out.println("Sende an Server: " + text);
 			writer.write(text + " \n");
 			writer.flush();
 		} catch (SocketException e) {
@@ -135,7 +133,6 @@ public class Client {
 	 */
 	public void close() {
 		try {
-			System.out.println("Sende an Server: " + "3 " + benutzername);
 			sendText("3 " + benutzername);
 		} catch (NullPointerException e) {
 			e.printStackTrace();
