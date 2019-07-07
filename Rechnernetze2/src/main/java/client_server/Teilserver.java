@@ -55,7 +55,6 @@ public class Teilserver {
 			try
 			{
 				line = reader.readLine();
-				System.out.printf("Vom Client (%s) empfangen: %s%n", socket.getRemoteSocketAddress(), line);
 
 				String eingabe[] = line.split(" ");
 
@@ -84,7 +83,6 @@ public class Teilserver {
 					handleEndChat(eingabe);
 					break;
 				default:
-					System.out.println("default " + line);
 					writer.write("default \n");
 					writer.flush();
 					break;
@@ -154,23 +152,18 @@ public class Teilserver {
 			if(nutzerverw.compareUser(benutzername)) {
 				if(nutzerverw.comparePass(benutzername, passwort.toString())) {
 					if(!nutzerverw.isUserActive(benutzername)) {
-						System.out.println("Eingeloggt");
-
 						writer.write("1 200 \n");
 						writer.flush();
 						nutzerverw.addActiveUser(benutzername, socket);
 					} else {
-						System.out.println("Schon eingeloggt ");
 						writer.write("Schon eingeloggt \n");	
 						writer.flush();
 					}
 				} else {
-					System.out.println("Passwort falsch ");
 					writer.write("Passwort falsch \n");
 					writer.flush();
 				}
 			} else {
-				System.out.println("Nutzer nicht vorhanden");
 				writer.write("Nutzer nicht vorhanden \n");
 				writer.flush();
 			}
@@ -189,7 +182,6 @@ public class Teilserver {
 
 			chatPartnerWriter.write("5 " + user + " \n");
 			chatPartnerWriter.flush();
-			System.out.println("Chatanfrage gesendet");
 		} catch (IOException e1) {
 			e1.printStackTrace();
 		}
@@ -230,7 +222,6 @@ public class Teilserver {
 
 			chatPartnerWriter.write("10 " + user + " \n");
 			chatPartnerWriter.flush();
-			System.out.println("Beenden des Chats mit " + user);
 		} catch (IOException e1) {
 			e1.printStackTrace();
 		}

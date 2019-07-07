@@ -53,11 +53,9 @@ public class ReceivingThread extends Thread {
 			if(!clientSocket.isClosed()) {
 				if(Arrays.equals(receivePacket.getData(), ok)) {
 					client.setSent(true);
-					System.out.println("RECEIVED OK");
 				} else {
 					client.setReceived(true);
 					String modifiedSentence = new String(receivePacket.getData());        
-					System.out.println("FROM CHATPARTNER: " + modifiedSentence); 
 					client.getActMessageListe().addMessage(chatpartner, modifiedSentence);
 				}
 			}
