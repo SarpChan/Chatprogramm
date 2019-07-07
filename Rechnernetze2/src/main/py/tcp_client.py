@@ -177,6 +177,7 @@ class ClientPy:
         self.chatEmpfangenThread._stop()
         self.threadsendBestaetigung._stop()
         
+        
      
                 
     def nachrichtZuChatListe(self, key,  message, sender):
@@ -192,6 +193,7 @@ class ClientPy:
     def sendEndUdpConnection(self,name):
         self.send("10 " + name)
         self.chatten = False
+        self.endUdpConnection
         
         
     def processReceived(self):
