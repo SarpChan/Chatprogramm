@@ -1,8 +1,7 @@
 import sys
 from PyQt5.QtWidgets import *
-from PyQt5.QtGui import *
-from PyQt5.QtCore import *
 from pydispatch import dispatcher
+
 #from tcp_client import *
 from Chatprogramm.Rechnernetze2.src.main.py.tcp_client import ClientPy
 #from Chatprogramm.Chatprogramm.Rechnernetze2.src.main.py.tcp_client import UpdatedListeEvent
@@ -192,6 +191,11 @@ class Fenster(QWidget):
         dispatcher.connect(self.switchToDialog, signal = "neueChatAnfrage", sender= dispatcher.Any)
         dispatcher.connect(self.refillChat, signal = "neueNachricht", sender = dispatcher.Any)
         dispatcher.connect(self.chatBeendet, signal="chatEnde", sender = dispatcher.Any)
+        dispatcher.connect(self.onClose, signal="aboutToQuit", sender = dispatcher.Any)
+
+    def onClose(self):
+        self.c.schliessen()
+        dispatcher.send(signal="readyToQuit" , sender = dispatcher.Any)
 
     def chatBeendet(self):
         """Handlermethode des ChatBeendet Events. Wird ausgelöst, wenn Chat Partner die Verbindung trennt."""
@@ -266,9 +270,9 @@ class Fenster(QWidget):
     def back(self):
         """ Handler Methode des back Buttons. Ruft die letzte View auf,
         wenn die letzte View nicht der Login oder Chat ist."""
-        if self.currentView == 2:
+        if self.currentView == 1:
             self.c.sendEndUdpConnection()
-            
+
         if self.lastView != 0 or self.lastView!=2:
             temp = self.lastView
             self.lastView =  self.currentView
@@ -316,16 +320,23 @@ class Fenster(QWidget):
 
 
         self.c.closeConnection()
-
+def closeFunc():
+    sys.exit()
+def closeEvent():
+    dispatcher.send(signal = "aboutToQuit", sender = dispatcher.Any)
 
 def main():
     app = QApplication(sys.argv)
+    app.aboutToQuit.connect(closeEvent)
+    dispatcher.connect(closeFunc, signal="readyToQuit", sender = dispatcher.Any)
     w = Fenster()
+
 
     sys.exit(app.exec_())
 
 if __name__== "__main__":
     main()
+
     
 
 
