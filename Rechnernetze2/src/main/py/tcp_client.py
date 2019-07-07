@@ -81,7 +81,7 @@ class ClientPy:
 
     def schliessen(self):
         """Leitet Abmelden mit Server ein. Socket wird geschlossen"""
-        self.sendText("6 ");    
+        self.sendText("6 "+ self.benutzername);    
 
     def requestActiveUser(self):
         """Fragt den Server nach einer aktuellen Nutzerliste der aktiven Nutzer"""
@@ -242,12 +242,12 @@ class ClientPy:
         while True:
             
             antwort = self.socket.recv(1024).decode("utf-8")
-            print("Vom Server empfangen", antwort)
+
             
             ''' Chatanfrage bekommen'''
             if antwort.split(" ")[0] == "5":
                 
-                print("Chat anfrage von " + antwort.split(" ")[1])
+
                 self.anfrageliste.append(antwort.split(" ")[1])
                 dispatcher.send(signal = self.neueChatAnfrage, sender = dispatcher.Any, anfrager = antwort.split(" ")[1])
 
@@ -261,7 +261,7 @@ class ClientPy:
             elif antwort.split(" ")[0] == "2":
                 self.buildUdpConnection(antwort)
                 dispatcher.send(signal = self.chatAufgebaut, sender = dispatcher.Any)
-                print("Chat anfrage angenommen")
+
                 
                 ''' erfolgreich ausgelogged'''
             elif antwort.split(" ")[0] == "3":
@@ -273,7 +273,7 @@ class ClientPy:
 
                 ''' Aktive Nutzerliste '''
             elif antwort.split(" ")[0] == "7":
-                print(antwort)
+
                 if len(antwort.split(" ")) > 1:
                     self.nutzerliste = []
                     self.nutzerliste = antwort.split(" ")[1:-1]
@@ -286,8 +286,8 @@ class ClientPy:
                 #    self.sendEndUdpConnection()
                     
                 self.loggedIn = False
-                dispatcher.send(signal=self.ausgeloggt, sender=dispatcher.Any)
                 self.socket.close()
+
                 break
                 '''Chat von Chatpartner beendet'''
             elif antwort.split(" ")[0] == "10":
@@ -296,6 +296,7 @@ class ClientPy:
             if antwort == None:
                 break
 
+        dispatcher.send(signal="readyToQuit", sender=dispatcher.Any)
 
                 
     

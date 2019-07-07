@@ -316,7 +316,7 @@ class Fenster(QWidget):
         """Setzt die Chat Anfrage als aktuelle Ansicht"""
         self.diaText.setText("Neue Anfrage von " + anfrager)
         self.stacked.setCurrentIndex(3)
-        self.show
+        self.show()
 
 
     def abmelden(self):
@@ -324,18 +324,13 @@ class Fenster(QWidget):
 
         if self.currentView == 1:
             self.c.sendEndUdpConnection()
-
-
         self.c.closeConnection()
-def closeFunc():
-    sys.exit()
-def closeEvent():
-    dispatcher.send(signal = "aboutToQuit", sender = dispatcher.Any)
+
+
 
 def main():
     app = QApplication(sys.argv)
-    app.aboutToQuit.connect(closeEvent)
-    dispatcher.connect(closeFunc, signal="readyToQuit", sender = dispatcher.Any)
+
     w = Fenster()
 
 
