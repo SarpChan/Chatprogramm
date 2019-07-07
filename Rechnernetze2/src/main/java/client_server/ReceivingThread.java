@@ -6,6 +6,9 @@ import java.net.DatagramSocket;
 import java.net.SocketException;
 import java.util.Arrays;
 
+/**
+ * Klasse, die von Thread erbt und Nachrichten empfaengt
+ */
 public class ReceivingThread extends Thread {
 
 	private byte[] receiveData = new byte[1024];
@@ -14,6 +17,13 @@ public class ReceivingThread extends Thread {
 	private String chatpartner;
 	private Client client;
 
+	/**
+	 * Konstruktor
+	 * @param client Client, in dem der ReceivingThread instanziiert wurde
+	 * @param meinPort Port des Clients
+	 * @param chatpartner Name des Chatpartners des Clients
+	 * @param ok ok-Byte, das bei Empfang einer Nachricht gesendet wird
+	 */
 	public ReceivingThread(Client client, int meinPort, String chatpartner, byte [] ok) {
 		super();
 		this.chatpartner = chatpartner;
@@ -26,6 +36,9 @@ public class ReceivingThread extends Thread {
 		}
 	}
 
+	/**
+	 * Wartet auf eingehende Nachrichten und fuegt diese der MessageListe des Clients an
+	 */
 	@Override
 	public void run() {
 
@@ -51,6 +64,9 @@ public class ReceivingThread extends Thread {
 		}
 	}
 
+	/**
+	 * schliesst den Socket
+	 */
 	public void closeSocket() {
 		clientSocket.close();
 	}

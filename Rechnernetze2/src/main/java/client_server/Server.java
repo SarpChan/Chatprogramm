@@ -1,25 +1,20 @@
 package client_server;
 
 import java.io.*;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Map;
-import java.util.Set;
 
 
 public class Server
 {
 	
 	private Map<InetAddress, Teilserver> teilserverliste;
-	
-	
 
 	public Server()
 	{
-		
 		teilserverliste = new HashMap<>();
 
 		try
@@ -41,9 +36,6 @@ public class Server
 							teilserverliste.put(temp, new Teilserver(socket));
 							teilserverliste.get(temp).handleRequests();
 							teilserverliste.remove(temp);
-
-
-
 						}
 					});
 					thread.start();
@@ -58,10 +50,6 @@ public class Server
 		{
 			e.printStackTrace();
 		}
-	}
-
-	public void updateClients(ArrayList list){
-		
 	}
 
 

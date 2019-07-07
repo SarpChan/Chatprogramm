@@ -8,10 +8,6 @@ public class ObservableListe {
     private List<String> liste = new ArrayList<>();
     private ChangeListener listener;
 
-    public ObservableListe(){
-        
-    }
-
     
     public void setListe(String[] s) {
         liste.clear();

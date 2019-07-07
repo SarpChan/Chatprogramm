@@ -6,8 +6,6 @@ import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.GraphicsConfiguration;
-import java.awt.GridLayout;
-import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ComponentAdapter;
@@ -17,8 +15,6 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
 
 import javax.swing.Box;
@@ -32,7 +28,6 @@ import javax.swing.JList;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPasswordField;
-import javax.swing.JScrollBar;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
@@ -40,12 +35,6 @@ import javax.swing.ListSelectionModel;
 import javax.swing.SwingUtilities;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
-
-import java.util.Observable;
 
 
 public class UI extends JFrame {
@@ -106,7 +95,6 @@ public class UI extends JFrame {
 				nachrichten.setFixedCellHeight(10);
 				nachrichten.setFixedCellHeight(-1);
 			}
-
 		};
 
 		nachrichten.addComponentListener(l);
@@ -125,19 +113,6 @@ public class UI extends JFrame {
 			}
 		});
 
-		// this.nutzerliste.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
-
-		//     @Override
-		//     public void valueChanged(ListSelectionEvent e) {
-
-		//         if( nutzerliste.getSelectedValue() != null){
-		//             //switchView(Views.CHAT); 
-		//         }
-
-		//     }
-
-		// });
-
 
 		setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 		this.addWindowListener(new WindowAdapter() {
@@ -147,8 +122,6 @@ public class UI extends JFrame {
 			}
 		});
 
-
-		//this.nutzerliste.setCellRenderer(new NutzerlisteRenderer());
 
 		this.nutzerListPanel = new JPanel();
 
@@ -428,7 +401,6 @@ public class UI extends JFrame {
 							JOptionPane optionPane = new JOptionPane();
 
 							dialog.add( new JDialog(alles, "Click a button", true));
-							int temp = dialog.size()-1;
 
 							optionPane.setBounds(getLocationOnScreen().x, getLocationOnScreen().y + 200, 400, 150);
 
@@ -472,8 +444,6 @@ public class UI extends JFrame {
 		this.chatEingabePanel.add(this.areaScrollPane);
 		this.chatEingabePanel.add(this.absenden);
 
-		//frame.add(southPanel, BorderLayout.SOUTH);
-
 		this.add(this.registrierPanel, BorderLayout.CENTER);
 
 
@@ -486,14 +456,11 @@ public class UI extends JFrame {
 				for (String ele : client.getActiveUsers().getListe()) {
 					nutzerModel.addElement(ele);
 				}
-
 			}
 		});
 
 
-
 	}
-
 
 
 
@@ -523,16 +490,11 @@ public class UI extends JFrame {
 
 					add(nutzerListPanel, BorderLayout.CENTER);
 					add(topPanel, BorderLayout.NORTH);
-					//client.requestActiveUser();
-
-
 
 					validate();                        
 
 					repaint();
 				} else if (whereTo == Views.CHAT) {
-					String targetClient = nutzerliste.getSelectedValue();
-
 					lastView = currentView;
 					currentView = Views.CHAT;
 
@@ -548,7 +510,6 @@ public class UI extends JFrame {
 					add(topPanel, BorderLayout.NORTH);
 					add(chatEingabePanel, BorderLayout.SOUTH);
 
-
 					validate();                        
 
 					repaint();
@@ -556,8 +517,6 @@ public class UI extends JFrame {
 			}
 		});
 	}
-
-
 
 
 
