@@ -3,8 +3,8 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 from pydispatch import dispatcher
-#from tcp_client import *
-from Chatprogramm.Rechnernetze2.src.main.py.tcp_client import ClientPy, registOKEvent
+from tcp_client import *
+#from Chatprogramm.Rechnernetze2.src.main.py.tcp_client import ClientPy, registOKEvent
 #from Chatprogramm.Chatprogramm.Rechnernetze2.src.main.py.tcp_client import UpdatedListeEvent
 
 

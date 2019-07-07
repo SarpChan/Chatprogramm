@@ -49,6 +49,13 @@ class ClientPy:
         t = threading.Thread(target = self.processReceived)
         t.start()
         
+        '''UDP Verbindung'''
+        self.received = False
+        self.setSend = True
+        self.ok = ("0000004F004B0000").encode()
+        self.chatPartner = ""
+        self.chatten = False
+        
     def sendText(self,text):
         print("Sende an Server " + text)
         text = text + " \n"
@@ -91,70 +98,63 @@ class ClientPy:
     def answerUdpConnection(self, bool):
         print("hallo")
         if(bool):
-            self.sendText("8 " + self.anfrageliste[-1]);
+            self.sendText("8 " + self.anfrageliste[-1])
+            self.chatten = True
         else:
-            self.sendText("9 " + self.anfrageliste[-1]);
+            self.sendText("9 " + self.anfrageliste[-1])
         
     
     def buildUdpConnection(self, line):
+        ''' Erstellt eine neue UDP connection zu einem Client'''
         self.udpIP = chatPort = int(line.split(" ")[3])
         self.udpPort = chatHostAdresse = line.split(" ")[2]
         self.meinPort = int(line.split(" ")[1])
         self.chatPartner = line.split(" ")[4]
-        self.ok = ("0000004F004B0000").encode()
+       
         
         self.received = False
         self.setSend = True
         
-        #neuer Sochet fuer UDP ?
+       
         self.clientSocket = socket(AF_INET, SOCK_DGRAM)
         self.clientSocket.bind((("127.0.0.1"), int(self.meinPort)))
         
         self.clientSocketSenden = socket(AF_INET, SOCK_DGRAM)
         
-        chatEmpfangenThread = threading.Thread(target = self.chatEmpfangen)
-        #sendThread = threading.Thread(target = self.chatSenden, args=(chatHostAdresse, chatPort, clientSocket))
-        chatEmpfangenThread.start()
-        #sendThread.start()
-        #self.sendeTreads.append([clientSocket, sendThread])
-        self.chatEmpfangenThreads.append([self.clientSocket, chatEmpfangenThread])
+        self.chatEmpfangenThread = threading.Thread(target = self.chatEmpfangen)
+        self.chatEmpfangenThread.start()
         
         threadsendBestaetigung = threading.Thread(target = self.sendBestaetigung)
         threadsendBestaetigung.start()
     
     def sendBestaetigung(self):
+        ''' Thread der bei eingehender nachricht eine Sende Bestaetigung zurueck sendet'''
         while True:
             if self.received:
-                   
-                    #self.send(self.ok)
                     self.clientSocketSenden.sendto(self.ok, (str(self.udpPort), int(self.udpIP)))
                     self.received = False
                     print("SENDING OK")
        
     def chatEmpfangen(self):
-
+        ''' Thread der eingehende nachrichten empfaengt'''
         while(True):
             modifiedMessage, data = self.clientSocket.recvfrom(2048)
             if(modifiedMessage == self.ok):
                 self.setSend = True
-                print("RECEIVED OK")
-                
-                
+                print("RECEIVED OK")   
             else:
                 self.received = True
                 print("FROM CHATPARTNER: " + modifiedMessage.decode())
                   
-            #print("message empfangen: " , modifiedMessage , data)
             if(modifiedMessage != self.ok):
                 print(type(modifiedMessage.decode())    )
                 print(type(self.benutzername)  )
                 print(type(self.chatPartner)   )
                 self.nachrichtZuChatListe(self.benutzername + self.chatPartner, modifiedMessage.decode().rstrip(), self.chatPartner)
-            #self.nachrichtZuChatListe(self.benutzername + modifiedMessage.split("'")[0], modifiedMessage.split("'")[1], modifiedMessage.split("'")[0])
-            
-    
+           
        
     def send(self, message):
+        '''Sendet Nachrichten an Chatpartner'''
         self.nachrichtZuChatListe(self.benutzername + self.chatPartner, message, self.benutzername)
         message  = message + " \n"
 
@@ -169,25 +169,17 @@ class ClientPy:
                 break
         
         
-        
-        
     
     def endUdpConnection(self):
         print("threads beenden")
-        #for thread in self.sendeTreads:
-        #   if i[0] == clientsocket:
-        #        i[1].stop()
-        #       self.sendeTreads.remove(i)
-            
-        for i in self.chatEmpfangenThreads:
-            if i[0] == self.clientsocket:
-                i[1].stop()
-                self.chatEmpfangenThreads.remove(i)
+        self.clientSocketSenden.close()
         self.clientSocket.close()
-                
+        self.chatEmpfangenThread._stop()
+        self.threadsendBestaetigung._stop()
+        
+     
                 
     def nachrichtZuChatListe(self, key,  message, sender):
-
 
         if key in self.chatListe:
             self.chatListe[key].append(sender + " : " + message)
@@ -196,11 +188,15 @@ class ClientPy:
         print(self.chatListe[key])
         dispatcher.send(signal="neueNachricht", sender = dispatcher.Any, liste = self.chatListe[key])
 
+    
+    def sendEndUdpConnection(self,name):
+        self.send("10 " + name)
+        self.chatten = False
         
         
     def processReceived(self):
+        '''Verarbeitet alle eingehenden Nachriten des Servers'''
         while True:
-            
             
             antwort = self.socket.recv(1024).decode("utf-8")
             print("Vom Server empfangen", antwort)
@@ -212,15 +208,11 @@ class ClientPy:
                 self.anfrageliste.append(antwort.split(" ")[1])
                 dispatcher.send(signal = self.neueChatAnfrage, sender = dispatcher.Any, anfrager = antwort.split(" ")[1])
 
-            
                 ''' erfolgreiches einloggen/ registrieren '''
             elif antwort.split(" ")[0] == "1" or antwort.split(" ")[0] == "0" : 
                 if antwort.split(" ")[1] == "200":
                     self.loggedIn = True
                     dispatcher.send(signal = self.logRegErfolgSig, sender = dispatcher.Any)
-
-
-
                       
                 ''' Chatanfrage angenommen'''
             elif antwort.split(" ")[0] == "2":
@@ -247,10 +239,17 @@ class ClientPy:
                 
                 '''Schliessen'''
             elif antwort.split(" ")[0] == "6":
-                 self.loggedIn = False
-                 dispatcher.send(signal=self.ausgeloggt, sender=dispatcher.Any)
-                 self.socket.close()
-                 break
+                if  self.chatten == True:
+                    self.sendEndUdpConnection()
+                    
+                self.loggedIn = False
+                dispatcher.send(signal=self.ausgeloggt, sender=dispatcher.Any)
+                self.socket.close()
+                break
+                '''Chat von Chatpartner beendet'''
+            elif antwort.split(" ")[0] == "10":
+                self.endUdpConnection()
+                self.chatten = False
 
 
                 
@@ -258,25 +257,4 @@ class ClientPy:
 def main():   
     c = ClientPy()
     
-    
-    #Registrieren:
-   # log = c.login("o", "p", "0")
-    #print(log)
-    ##while True:
-    
-        
-    #c.requestUdpConnection("i")
-    #antwort = c.sendText("0 a b") 
-    
-     
-        #
-        #sentence = input("Input lowercase sentence: ")
-        #c.sendText(sentence)
-      
-    #c.closeConnection()
-        
-#main()
-
-
-
 
