@@ -95,7 +95,7 @@ class Fenster(QWidget):
         self.register.setDisabled(True)
 
         self.username.textChanged.connect(self.loginChange)
-        self.sig.registokEvent.connect(self.switchToHome)
+
 
         self.userBox.addStretch()
         self.userBox.addWidget(self.user)
@@ -191,8 +191,11 @@ class Fenster(QWidget):
         dispatcher.connect(self.refillChat, signal = "refillChat", sender= dispatcher.Any)
         dispatcher.connect(self.switchToDialog, signal = "neueChatAnfrage", sender= dispatcher.Any)
         dispatcher.connect(self.refillChat, signal = "neueNachricht", sender = dispatcher.Any)
+        dispatcher.connect(self.chatBeendet, signal="chatEnde", sender = dispatcher.Any)
 
-
+    def chatBeendet(self):
+        """Handlermethode des ChatBeendet Events. Wird ausgelöst, wenn Chat Partner die Verbindung trennt."""
+        self.switchToHome()
 
     def akzeptiere(self):
         """" Löst im Client das Akzeptieren einer Chatanfrage aus
@@ -201,6 +204,7 @@ class Fenster(QWidget):
     def ablehnen(self):
         """" Löst im Client das Ablehnen einer Chatanfrage aus
                 """
+        self.stacked.setCurrentIndex(self.currentView)
         self.c.answerUdpConnection(False)
 
     def textFeldChanged(self):
@@ -262,8 +266,10 @@ class Fenster(QWidget):
     def back(self):
         """ Handler Methode des back Buttons. Ruft die letzte View auf,
         wenn die letzte View nicht der Login oder Chat ist."""
-
-        if self.lastView != 0:
+        if self.currentView == 2:
+            self.c.sendEndUdpConnection()
+            
+        if self.lastView != 0 or self.lastView!=2:
             temp = self.lastView
             self.lastView =  self.currentView
             self.currentView =  temp
@@ -275,14 +281,14 @@ class Fenster(QWidget):
     def switchToHome(self):
         """Setzt die nutzerView als aktuelle Ansicht"""
         self.lastView = self.currentView
-        self.currentView = self.nutzerView
+        self.currentView = 2
         self.stacked.setCurrentIndex(2)
         self.show()
 
     def switchToChat(self):
         """Setzt die chatView als aktuelle Ansicht"""
         self.lastView = self.currentView
-        self.currentView = self.chatView
+        self.currentView = 1
         self.stacked.setCurrentIndex(1)
         self.show()
 
@@ -291,7 +297,7 @@ class Fenster(QWidget):
         self.username.setText("")
         self.password.setText("")
         self.lastView = None
-        self.currentView = self.loginView
+        self.currentView = 0
         self.stacked.setCurrentIndex(0)
         self.show()
 
@@ -304,6 +310,9 @@ class Fenster(QWidget):
 
     def abmelden(self):
         """ Handler Methode des abmelden buttons. Meldet den Client vom Server ab"""
+
+        if self.currentView == 2:
+            self.c.sendEndUdpConnection()
 
 
         self.c.closeConnection()
