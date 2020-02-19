@@ -4,28 +4,25 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.google.gson.annotations.Expose;
-
 public class MessageListe {
-    
-    @Expose
+
     private List<Message> liste = new ArrayList<>();
     private ChangeListener listener;
-    @Expose
+
     private String user, otherUser;
 
-    public MessageListe(String user, String otherUser){
+    public MessageListe(String user, String otherUser) {
         this.user = user;
         this.otherUser = otherUser;
     }
 
-    
-    public void addMessage(String sender, String message){
+    public void addMessage(String sender, String message) {
         liste.add(new Message(LocalDateTime.now(), sender, message));
-        if (listener != null) listener.onChange();
+        if (listener != null)
+            listener.onChange();
     }
 
-    public void deleteVerlauf(){
+    public void deleteVerlauf() {
         liste.clear();
     }
 
@@ -64,5 +61,4 @@ public class MessageListe {
         this.otherUser = otherUser;
     }
 
-    
 }
